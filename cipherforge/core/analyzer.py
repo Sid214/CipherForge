@@ -1,46 +1,38 @@
-"""
+﻿"""
 cipherforge/core/analyzer.py
-─────────────────────────────
-Post-generation analysis: entropy scoring, length distribution,
-character frequency, and pattern breakdown.
+Optimized post-generation and external wordlist analysis:
+Fast Shannon entropy scoring, length distribution, character frequency, and pattern breakdown.
+Prevents GUI freezing on large datasets.
 """
 
 from __future__ import annotations
 
 import math
+import random
 from collections import Counter
 from dataclasses import dataclass, field
 
-
 @dataclass
 class AnalysisResult:
-    """Holds the full analysis of a generated wordlist."""
     total_words: int = 0
     length_distribution: dict[int, int] = field(default_factory=dict)
     char_frequency: dict[str, int] = field(default_factory=dict)
-    pattern_breakdown: dict[str, float] = field(default_factory=dict)  # label → percentage
-    entropy_scores: list[tuple[str, float]] = field(default_factory=list)  # (word, entropy) sorted desc
+    pattern_breakdown: dict[str, float] = field(default_factory=dict)
+    entropy_scores: list[tuple[str, float]] = field(default_factory=list)
     avg_entropy: float = 0.0
     max_entropy: float = 0.0
     min_entropy: float = 0.0
     avg_length: float = 0.0
-    strength_tiers: dict[str, int] = field(default_factory=dict)  # tier → count
-
+    strength_tiers: dict[str, int] = field(default_factory=dict)
 
 def shannon_entropy(word: str) -> float:
-    """
-    Calculate Shannon entropy of a word in bits.
-    Higher = more random/complex.
-    """
     if not word:
         return 0.0
     freq = Counter(word)
     total = len(word)
     return -sum((c / total) * math.log2(c / total) for c in freq.values())
 
-
 def strength_tier(entropy: float) -> str:
-    """Classify entropy score into a human-readable tier."""
     if entropy < 2.0:
         return 'Weak'
     elif entropy < 3.0:
@@ -50,67 +42,90 @@ def strength_tier(entropy: float) -> str:
     else:
         return 'Excellent'
 
-
-def analyze_wordlist(wordlist: set[str]) -> AnalysisResult:
-    """
-    Run full analysis on a generated wordlist set.
-    Returns an AnalysisResult dataclass ready for GUI rendering.
-    """
+def analyze_wordlist(wordlist: set[str] | list[str], max_eval_sample: int = 15000) -> AnalysisResult:
     result = AnalysisResult()
     if not wordlist:
         return result
 
-    result.total_words = len(wordlist)
+    if isinstance(wordlist, set):
+        word_list = list(wordlist)
+    else:
+        word_list = wordlist
 
-    # ── Length Distribution ───────────────────────────────────────────────────
-    len_dist: dict[int, int] = Counter(len(w) for w in wordlist)
-    result.length_distribution = dict(sorted(len_dist.items()))
-    result.avg_length = sum(k * v for k, v in len_dist.items()) / result.total_words
+    total = len(word_list)
+    result.total_words = total
 
-    # ── Character Frequency (top 30) ──────────────────────────────────────────
-    all_chars: Counter = Counter()
-    for w in wordlist:
-        all_chars.update(w)
-    result.char_frequency = dict(all_chars.most_common(30))
+    # If dataset is very large (> 25000), sample for fast length & char stats
+    if total > 30000:
+        stat_sample = random.sample(word_list, 20000)
+        len_dist = Counter(len(w) for w in stat_sample)
+        scale = total / 20000
+        result.length_distribution = {k: int(v * scale) for k, v in sorted(len_dist.items())}
+        result.avg_length = sum(len(w) for w in stat_sample) / len(stat_sample)
+        all_chars: Counter = Counter()
+        for w in stat_sample:
+            all_chars.update(w)
+        result.char_frequency = dict(all_chars.most_common(20))
+        check_words = stat_sample
+    else:
+        len_dist = Counter(len(w) for w in word_list)
+        result.length_distribution = dict(sorted(len_dist.items()))
+        result.avg_length = sum(k * v for k, v in len_dist.items()) / total
+        all_chars = Counter()
+        for w in word_list:
+            all_chars.update(w)
+        result.char_frequency = dict(all_chars.most_common(20))
+        check_words = word_list
 
-    # ── Pattern Breakdown ─────────────────────────────────────────────────────
-    with_prefix    = sum(1 for w in wordlist if any(w.startswith(p) for p in ['admin_', 'user_', 'root_', 'hack_', 'pass_', 'secret_']))
-    with_suffix_num= sum(1 for w in wordlist if w[-1].isdigit())
-    with_leet      = sum(1 for w in wordlist if any(c in w for c in ['@', '$', '0', '1', '3', '4', '5', '7', '8', '!']))
-    with_upper     = sum(1 for w in wordlist if any(c.isupper() for c in w))
-    n = result.total_words
+    # Pattern Breakdown
+    n_sample = len(check_words)
+    prefixes = ('admin_', 'user_', 'root_', 'hack_', 'pass_', 'secret_')
+    leet_set = {'@', '$', '0', '1', '3', '4', '5', '7', '8', '!'}
+    
+    with_prefix = 0
+    with_suffix_num = 0
+    with_leet = 0
+    with_upper = 0
+
+    for w in check_words:
+        if w.startswith(prefixes):
+            with_prefix += 1
+        if w and w[-1].isdigit():
+            with_suffix_num += 1
+        if any(c in leet_set for c in w):
+            with_leet += 1
+        if any(c.isupper() for c in w):
+            with_upper += 1
 
     result.pattern_breakdown = {
-        'Has Prefix'         : round(100 * with_prefix     / n, 1),
-        'Ends with Digit'    : round(100 * with_suffix_num / n, 1),
-        'Leet Chars'         : round(100 * with_leet       / n, 1),
-        'Has Uppercase'      : round(100 * with_upper      / n, 1),
+        'Has Prefix': round(100 * with_prefix / n_sample, 1),
+        'Ends with Digit': round(100 * with_suffix_num / n_sample, 1),
+        'Leet Chars': round(100 * with_leet / n_sample, 1),
+        'Has Uppercase': round(100 * with_upper / n_sample, 1),
     }
 
-    # ── Entropy Scoring ───────────────────────────────────────────────────────
-    # For performance, sample up to 5000 words for entropy scoring
-    sample_words = list(wordlist)
-    if len(sample_words) > 5000:
-        import random
-        random.seed(42)
-        sample_words = random.sample(sample_words, 5000)
+    # Entropy evaluation sample (limit to max_eval_sample for instantaneous response)
+    if total > max_eval_sample:
+        entropy_sample = random.sample(word_list, max_eval_sample)
+    else:
+        entropy_sample = word_list
 
-    scored = [(w, shannon_entropy(w)) for w in sample_words]
+    scored = [(w, round(shannon_entropy(w), 4)) for w in entropy_sample]
     scored.sort(key=lambda x: x[1], reverse=True)
 
-    result.entropy_scores = scored  # all scored words, desc order
+    result.entropy_scores = scored
     entropies = [e for _, e in scored]
-    result.avg_entropy = sum(entropies) / len(entropies)
-    result.max_entropy = max(entropies)
-    result.min_entropy = min(entropies)
+    result.avg_entropy = round(sum(entropies) / len(entropies), 3)
+    result.max_entropy = round(max(entropies), 3)
+    result.min_entropy = round(min(entropies), 3)
 
-    # ── Strength Tiers ────────────────────────────────────────────────────────
-    tiers: Counter = Counter(strength_tier(e) for _, e in scored)
+    tiers = Counter(strength_tier(e) for _, e in scored)
+    scale_tier = total / len(scored)
     result.strength_tiers = {
-        'Weak':      tiers.get('Weak', 0),
-        'Fair':      tiers.get('Fair', 0),
-        'Strong':    tiers.get('Strong', 0),
-        'Excellent': tiers.get('Excellent', 0),
+        'Weak': int(tiers.get('Weak', 0) * scale_tier),
+        'Fair': int(tiers.get('Fair', 0) * scale_tier),
+        'Strong': int(tiers.get('Strong', 0) * scale_tier),
+        'Excellent': int(tiers.get('Excellent', 0) * scale_tier),
     }
 
     return result

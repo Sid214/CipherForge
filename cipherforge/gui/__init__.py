@@ -1,2 +1,2 @@
-# cipherforge/gui/__init__.py
-from .app import CipherForgeApp
+﻿# cipherforge/gui/__init__.py
+from .app_qt import launch_gui, CipherForgeWindow
