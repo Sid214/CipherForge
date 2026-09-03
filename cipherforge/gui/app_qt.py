@@ -329,6 +329,7 @@ QPushButton#btn_secondary:disabled {{
     border-color: {t['border']};
 }}
 
+/* Button Danger: Stop Button with clean minimal red styling */
 QPushButton#btn_danger {{
     background-color: transparent;
     color: {t['danger']};
@@ -338,6 +339,7 @@ QPushButton#btn_danger {{
     font-weight: 600;
     padding: 8px 18px;
     min-height: 18px;
+    text-align: center;
 }}
 QPushButton#btn_danger:hover {{
     background-color: {t['danger']};
@@ -1054,17 +1056,6 @@ class CipherForgeWindow(QMainWindow):
         combo_view = QListView()
         self._combo_relation.setView(combo_view)
 
-        # Remove outer rectangular frame/shadow from container so ONLY the rounded opaque listview is visible
-        popup_container = self._combo_relation.view().parentWidget()
-        if popup_container:
-            popup_container.setFrameShape(QFrame.Shape.NoFrame)
-            popup_container.setLineWidth(0)
-            popup_container.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, True)
-            popup_container.setWindowFlags(Qt.WindowType.Popup | Qt.WindowType.FramelessWindowHint | Qt.WindowType.NoDropShadowWindowHint)
-            if popup_container.layout():
-                popup_container.layout().setContentsMargins(0, 0, 0, 0)
-                popup_container.layout().setSpacing(0)
-
         self._combo_relation.addItems(RELATIONS)
         self._combo_relation.setMaxVisibleItems(len(RELATIONS))
         self._combo_relation.setFixedWidth(135)
@@ -1155,7 +1146,8 @@ class CipherForgeWindow(QMainWindow):
         self._btn_est.setCursor(Qt.CursorShape.PointingHandCursor)
         self._btn_est.clicked.connect(self._estimate)
 
-        self._btn_stop = QPushButton("⛔  Stop")
+        # Stop button with clean, minimal red circular UI symbol (no colorful emoji)
+        self._btn_stop = QPushButton("●  Stop")
         self._btn_stop.setObjectName("btn_danger")
         self._btn_stop.setFixedHeight(46)
         self._btn_stop.setEnabled(False)
@@ -1893,6 +1885,48 @@ class CipherForgeWindow(QMainWindow):
         QApplication.setPalette(pal)
 
         QApplication.instance().setStyleSheet(_qss(t))
+
+        # Re-apply scoped styling to dropdown popup container for clean single opaque menu
+        if hasattr(self, "_combo_relation"):
+            container = self._combo_relation.view().parentWidget()
+            if container:
+                container.setWindowFlags(Qt.WindowType.Popup | Qt.WindowType.FramelessWindowHint | Qt.WindowType.NoDropShadowWindowHint)
+                container.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, True)
+                container.setFrameShape(QFrame.Shape.NoFrame)
+                container.setLineWidth(0)
+                container.setStyleSheet(f"""
+                    QFrame {{
+                        background: transparent;
+                        border: none;
+                        padding: 0px;
+                        margin: 0px;
+                    }}
+                    QListView {{
+                        background-color: {t['card_bg']};
+                        color: {t['text']};
+                        border: 1.5px solid {t['border2']};
+                        border-radius: 8px;
+                        padding: 4px;
+                        outline: 0px;
+                        selection-background-color: {t['accent']};
+                        selection-color: #FFFFFF;
+                    }}
+                    QListView::item {{
+                        padding: 6px 10px;
+                        border-radius: 4px;
+                        min-height: 22px;
+                        color: {t['text']};
+                        background-color: transparent;
+                    }}
+                    QListView::item:hover {{
+                        background-color: {t['nav_hover']};
+                        color: {t['text']};
+                    }}
+                    QListView::item:selected {{
+                        background-color: {t['accent']};
+                        color: #FFFFFF;
+                    }}
+                """)
 
         # Precisely style vertical scrollbar of console: no white track, only blue thumb
         if hasattr(self, "_console"):
