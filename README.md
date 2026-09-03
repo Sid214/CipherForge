@@ -1,8 +1,7 @@
 <div align="center">
 
-<h1 align="center" style="font-family: 'Orbitron', 'Rajdhani', 'Space Grotesk', 'Montserrat', 'Segoe UI', sans-serif; font-size: 42px; font-weight: 900; letter-spacing: 3.5px;">
-  <img src="cipherforge/assets/logo.png" width="48" height="48" valign="middle" alt="CipherForge Logo" />
-  &nbsp;CIPHERFORGE
+<h1 align="center">
+  <img src="cipherforge/assets/logo.png" width="46" height="46" align="absmiddle" style="vertical-align: middle; margin-right: 8px;" alt="CipherForge Logo" /><span style="font-family: 'Agency FB', Impact, 'Arial Black', sans-serif; font-size: 46px; font-weight: 900; letter-spacing: 1.5px; vertical-align: middle;">CIPHERFORGE</span>
 </h1>
 
 **Targeted Credential Permutation & Entropy Analysis Suite**
