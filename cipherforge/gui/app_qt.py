@@ -1163,7 +1163,7 @@ class CipherForgeWindow(QMainWindow):
         self._btn_est.clicked.connect(self._estimate)
 
         # Stop button with clean, minimal red circular UI symbol (no colorful emoji)
-        self._btn_stop = QPushButton("●  Stop")
+        self._btn_stop = QPushButton("Abort")
         self._btn_stop.setObjectName("btn_danger")
         self._btn_stop.setFixedHeight(46)
         self._btn_stop.setEnabled(False)
