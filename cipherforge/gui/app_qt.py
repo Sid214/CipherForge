@@ -189,7 +189,7 @@ QLineEdit:focus {{
     background-color: {t['card_bg']};
 }}
 
-/* Clean Single-Layer QComboBox with Smooth Translucent Antialiasing */
+/* QComboBox: Single clean control */
 QComboBox {{
     background-color: {t['input_bg']};
     border: 1.5px solid {t['border2']};
@@ -222,7 +222,7 @@ QComboBox::down-arrow {{
     margin-right: 6px;
 }}
 
-/* Single clean popup menu with one consistent background and one border, rounded on all 4 corners */
+/* Dropdown Popup: One single opaque popup with clean border and rounded corners */
 QComboBox QFrame {{
     border: none;
     background: transparent;
@@ -310,7 +310,6 @@ QPushButton#btn_primary:disabled {{
     color: {t['text_muted']};
 }}
 
-/* Button Secondary: Precisely 34px height when fixed, matching adjacent inputs */
 QPushButton#btn_secondary {{
     background-color: {t['card_bg2']};
     color: {t['accent']};
@@ -452,49 +451,55 @@ QPlainTextEdit#console {{
     padding: 8px;
 }}
 
-/* Terminal Scrollbar: Completely transparent track blending into terminal */
+/* Terminal Scrollbar: Track perfectly matches terminal background with blue thumb */
 QPlainTextEdit#console QScrollBar:vertical {{
-    background: transparent;
-    background-color: transparent;
+    background: {t['console_bg']};
+    background-color: {t['console_bg']};
     width: 6px;
     border: none;
     margin: 0px;
 }}
 QPlainTextEdit#console QScrollBar::handle:vertical {{
-    background: {t['border2']};
+    background: {t['accent']};
     border-radius: 3px;
     min-height: 24px;
 }}
 QPlainTextEdit#console QScrollBar::handle:vertical:hover {{
-    background: {t['accent']};
+    background: {t['accent_glow']};
 }}
 QPlainTextEdit#console QScrollBar::add-line:vertical, 
 QPlainTextEdit#console QScrollBar::sub-line:vertical,
 QPlainTextEdit#console QScrollBar::add-page:vertical, 
 QPlainTextEdit#console QScrollBar::sub-page:vertical {{
-    background: transparent;
-    background-color: transparent;
+    background: {t['console_bg']};
+    background-color: {t['console_bg']};
     border: none;
     height: 0px;
     width: 0px;
 }}
 
-/* Global Scrollbar */
-QScrollBar:vertical {{
+/* Global Scrollbars scoped specifically to general scroll areas */
+QScrollArea QScrollBar:vertical,
+QTableWidget QScrollBar:vertical {{
     background: {t['app_bg']};
     width: 6px;
     border: none;
     border-radius: 3px;
 }}
-QScrollBar::handle:vertical {{
+QScrollArea QScrollBar::handle:vertical,
+QTableWidget QScrollBar::handle:vertical {{
     background: {t['border2']};
     border-radius: 3px;
     min-height: 20px;
 }}
-QScrollBar::handle:vertical:hover {{
+QScrollArea QScrollBar::handle:vertical:hover,
+QTableWidget QScrollBar::handle:vertical:hover {{
     background: {t['accent']};
 }}
-QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {{ height: 0; }}
+QScrollArea QScrollBar::add-line:vertical, QScrollArea QScrollBar::sub-line:vertical,
+QTableWidget QScrollBar::add-line:vertical, QTableWidget QScrollBar::sub-line:vertical {{
+    height: 0px;
+}}
 
 QTableWidget {{
     background-color: {t['card_bg2']};
@@ -1044,16 +1049,14 @@ class CipherForgeWindow(QMainWindow):
         f_in_row.setSpacing(8)
         f_in_row.setAlignment(Qt.AlignmentFlag.AlignVCenter)
 
-        # Single-layer clean relationship dropdown with zero duplicate outer frame
+        # Single clean opaque dropdown popup tightly containing 6 options
         self._combo_relation = QComboBox()
-        self._combo_relation.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, True)
         combo_view = QListView()
         self._combo_relation.setView(combo_view)
-        
-        # Remove extra duplicate outer frame from the popup container
+
+        # Remove outer rectangular frame/shadow from container so ONLY the rounded opaque listview is visible
         popup_container = self._combo_relation.view().parentWidget()
         if popup_container:
-            popup_container.setStyleSheet("background: transparent; border: none; padding: 0px; margin: 0px;")
             popup_container.setFrameShape(QFrame.Shape.NoFrame)
             popup_container.setLineWidth(0)
             popup_container.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, True)
@@ -1071,7 +1074,6 @@ class CipherForgeWindow(QMainWindow):
         self._in_fam_name.setPlaceholderText("E.g. Priya")
         self._in_fam_name.setFixedHeight(34)
 
-        # + Add Member button aligned exactly to 34px height
         btn_add_fam = QPushButton("＋ Add Member")
         btn_add_fam.setObjectName("btn_secondary")
         btn_add_fam.setFixedHeight(34)
@@ -1221,10 +1223,6 @@ class CipherForgeWindow(QMainWindow):
         self._console.setObjectName("console")
         self._console.setReadOnly(True)
         self._console.setFixedHeight(160)
-
-        # Style vertical scrollbar with transparent trough blending into terminal
-        vsb = self._console.verticalScrollBar()
-        vsb.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, True)
         lv2.addWidget(self._console)
 
         krow = QHBoxLayout()
@@ -1370,7 +1368,6 @@ class CipherForgeWindow(QMainWindow):
         hl.setObjectName("h1")
         vl.addWidget(hl)
 
-        # In-Page Modern Toast Confirmation Banner with perfectly aligned buttons
         self._toast_banner = QFrame()
         self._toast_banner.setObjectName("card2")
         self._toast_banner.setVisible(False)
@@ -1897,30 +1894,29 @@ class CipherForgeWindow(QMainWindow):
 
         QApplication.instance().setStyleSheet(_qss(t))
 
-        # Explicitly enforce transparent scrollbar trough on terminal
+        # Precisely style vertical scrollbar of console: no white track, only blue thumb
         if hasattr(self, "_console"):
             vsb = self._console.verticalScrollBar()
-            vsb.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, True)
             vsb.setStyleSheet(f"""
                 QScrollBar:vertical {{
-                    background: transparent;
-                    background-color: transparent;
+                    background: {t['console_bg']};
+                    background-color: {t['console_bg']};
                     width: 6px;
                     margin: 0px;
                     border: none;
                 }}
                 QScrollBar::handle:vertical {{
-                    background: {t['border2']};
+                    background: {t['accent']};
                     border-radius: 3px;
                     min-height: 24px;
                 }}
                 QScrollBar::handle:vertical:hover {{
-                    background: {t['accent']};
+                    background: {t['accent_glow']};
                 }}
                 QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical,
                 QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {{
-                    background: transparent;
-                    background-color: transparent;
+                    background: {t['console_bg']};
+                    background-color: {t['console_bg']};
                     border: none;
                     height: 0px;
                     width: 0px;
