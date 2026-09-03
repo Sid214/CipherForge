@@ -1,20 +1,25 @@
 <div align="center">
 
-<p align="center">
-  <img src="cipherforge/assets/logo.png" width="68" height="68" align="absmiddle" style="vertical-align: middle; margin-right: 12px;" alt="CipherForge Logo" /><span style="font-family: 'Arial Black', Arial, sans-serif; font-size: 44px; font-weight: 900; letter-spacing: 2px; vertical-align: middle;">CIPHERFORGE</span>
-</p>
+  <p align="center">
+    <img src="cipherforge/assets/logo.png" width="64" height="64" align="middle" style="vertical-align: middle; margin-right: 14px;" alt="CipherForge Logo" />
+    <strong style="font-family: 'Arial Black', Impact, 'Trebuchet MS', Arial, sans-serif; font-size: 42px; font-weight: 900; letter-spacing: 2px; vertical-align: middle; line-height: 1;">CIPHERFORGE</strong>
+  </p>
 
-### **Targeted Credential Permutation &amp; Entropy Analysis Suite**
+  <p align="center">
+    <strong style="font-size: 16px;">Targeted Credential Permutation &amp; Entropy Analysis Suite</strong>
+  </p>
 
-*A desktop application and scriptable CLI tool engineered for security auditors, penetration testers, and security researchers to benchmark credential resilience using targeted psychological anchor profiling.*
+  <p align="center">
+    <em>A desktop application and scriptable CLI tool engineered for security auditors, penetration testers, and security researchers to benchmark credential resilience using targeted psychological anchor profiling.</em>
+  </p>
 
-<br/>
-
-[![Python](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)
-[![GUI Framework](https://img.shields.io/badge/GUI-PyQt6-green.svg)](https://www.riverbankcomputing.com/software/pyqt/)
-[![Engine](https://img.shields.io/badge/Engine-3--Stage%20Synthesis-orange.svg)]()
-[![License: MIT](https://img.shields.io/badge/License-MIT-purple.svg)](LICENSE)
-[![Author](https://img.shields.io/badge/Author-Siddhesh-brightgreen.svg)]()
+  <p align="center">
+    <a href="https://www.python.org/"><img src="https://img.shields.io/badge/Python-3.10%2B-blue.svg" alt="Python" /></a>
+    <a href="https://www.riverbankcomputing.com/software/pyqt/"><img src="https://img.shields.io/badge/GUI-PyQt6-green.svg" alt="GUI Framework" /></a>
+    <img src="https://img.shields.io/badge/Engine-3--Stage%20Synthesis-orange.svg" alt="Engine" />
+    <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-purple.svg" alt="License: MIT" /></a>
+    <img src="https://img.shields.io/badge/Author-Siddhesh-brightgreen.svg" alt="Author" />
+  </p>
 
 </div>
 
