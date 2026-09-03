@@ -33,26 +33,21 @@ def build_base_candidates(profile: dict) -> set[str]:
     color  = (profile.get('color')  or '').strip().lower()
     sport  = (profile.get('sport')  or '').strip().lower()
 
-    # Family members list
     family_members = [m.strip().lower() for m in profile.get('family_members', []) if m and m.strip()]
-    # Custom phrases / passwords
     custom_phrases = [p.strip().lower() for p in profile.get('custom_phrases', []) if p and p.strip()]
 
     year_short = year[2:] if len(year) == 4 else ''
     roots: set[str] = set()
 
-    # 1. Single tokens
     primary_tokens = [name, last, pet, city, color, sport] + family_members + custom_phrases
     for t in filter(None, primary_tokens):
         roots.add(t)
 
-    # 2. Name + Year variants
     if name and year:
         roots.add(name + year)
         if year_short:
             roots.add(name + year_short)
 
-    # 3. Name + Last
     if name and last:
         roots.add(name + last)
         roots.add(last + name)
@@ -60,7 +55,6 @@ def build_base_candidates(profile: dict) -> set[str]:
             roots.add(name + last + year)
             roots.add(last + name + year)
 
-    # 4. Name + Pet
     if name and pet:
         roots.add(name + pet)
         roots.add(pet + name)
@@ -70,13 +64,11 @@ def build_base_candidates(profile: dict) -> set[str]:
             if year_short:
                 roots.add(name + pet + year_short)
 
-    # 5. Pet + Year
     if pet and year:
         roots.add(pet + year)
         if year_short:
             roots.add(pet + year_short)
 
-    # 6. Name + City + Year
     if name and city:
         roots.add(name + city)
         if year:
@@ -84,14 +76,12 @@ def build_base_candidates(profile: dict) -> set[str]:
             if year_short:
                 roots.add(name + city + year_short)
 
-    # 7. Name + Color / Sport
     for extra in filter(None, [color, sport]):
         if name:
             roots.add(name + extra)
         if year:
             roots.add(extra + year)
 
-    # 8. Family member combinations
     for member in family_members:
         roots.add(member)
         if year:
@@ -108,10 +98,8 @@ def build_base_candidates(profile: dict) -> set[str]:
             if year:
                 roots.add(member + last + year)
 
-    # 9. Custom phrases combinations
     for phrase in custom_phrases:
         roots.add(phrase)
-        # remove spaces if any
         nospace = phrase.replace(" ", "")
         if nospace:
             roots.add(nospace)
@@ -123,14 +111,12 @@ def build_base_candidates(profile: dict) -> set[str]:
             roots.add(name + nospace)
             roots.add(nospace + name)
 
-    # 10. Name + Special + Year (john@1990, john!1990, ...)
     if name and year:
         for sp in SPECIALS:
             roots.add(name + sp + year)
             if year_short:
                 roots.add(name + sp + year_short)
 
-    # 11. All non-empty tokens concatenated
     all_tokens = [t for t in [name, last, pet, city, color, sport, year] if t]
     if len(all_tokens) >= 3:
         roots.add(''.join(all_tokens))
@@ -188,10 +174,31 @@ def apply_affixes(
                 wordlist.add(candidate)
     return wordlist
 
-def estimate_count(profile: dict, leet_max: int = DEFAULT_LEET_MAX) -> int:
-    roots = build_base_candidates(profile)
-    estimated_roots = len(roots) * min(leet_max, 20)
-    return estimated_roots * len(PREFIXES) * len(SUFFIXES)
+def estimate_count(
+    profile: dict,
+    leet_max: int = DEFAULT_LEET_MAX,
+    min_len: int = DEFAULT_MIN_LEN,
+    max_len: int = DEFAULT_MAX_LEN,
+) -> int:
+    bases = build_base_candidates(profile)
+    if not bases:
+        return 0
+
+    year = (profile.get('year') or '').strip()
+    extra_sfx = []
+    if year and year not in SUFFIXES:
+        extra_sfx.append(year)
+    if len(year) == 4 and year[2:] not in SUFFIXES:
+        extra_sfx.append(year[2:])
+
+    sample_bases = list(bases)[:25]
+    sample_expanded = expand_variants(set(sample_bases), leet_max=min(leet_max, 40))
+    sample_words = apply_affixes(sample_expanded, min_len=min_len, max_len=max_len, extra_suffixes=extra_sfx)
+
+    ratio = len(bases) / len(sample_bases)
+    scale = (leet_max / 40) ** 0.5 if leet_max > 40 else 1.0
+    est = int(len(sample_words) * ratio * scale)
+    return max(est, len(bases) * 10)
 
 def run_pipeline(
     profile: dict,

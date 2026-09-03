@@ -1,9 +1,15 @@
 ﻿"""
 cipherforge/gui/app_qt.py
 CipherForge Studio — Modern, Responsive, GPU-Accelerated PyQt6 Desktop Suite.
+Engineered for zero-lag responsiveness, seamless Light/Dark mode, and advanced wordlist synthesis.
 """
 from __future__ import annotations
-import sys, os, random, datetime, threading
+
+import sys
+import os
+import random
+import datetime
+import threading
 from typing import Callable
 
 from PyQt6.QtWidgets import (
@@ -30,36 +36,66 @@ from cipherforge.core.rules import DEFAULT_MIN_LEN, DEFAULT_MAX_LEN
 ASSETS = os.path.join(os.path.dirname(__file__), "..", "assets")
 
 DARK = dict(
-    app_bg="#0B0F19", sidebar_bg="#0F172A", card_bg="#131F37",
-    card_bg2="#0A1120", input_bg="#070C18", border="#1E293B",
-    border2="#334155", text="#F8FAFC", text_sub="#94A3B8",
-    text_muted="#64748B", accent="#2563EB", accent_dark="#1D4ED8",
-    accent_glow="#38BDF8", success="#10B981", warn="#F59E0B",
-    danger="#EF4444", purple="#8B5CF6", bar_track="#1E293B",
-    console_bg="#050811", console_text="#38BDF8",
-    nav_hover="#1E293B", nav_active_bg="#1E3A8A", progress_bg="#1E293B",
+    app_bg="#0B0F19",
+    sidebar_bg="#0F172A",
+    card_bg="#131F37",
+    card_bg2="#0A1120",
+    input_bg="#070C18",
+    border="#1E293B",
+    border2="#334155",
+    text="#F8FAFC",
+    text_sub="#94A3B8",
+    text_muted="#64748B",
+    accent="#2563EB",
+    accent_dark="#1D4ED8",
+    accent_glow="#38BDF8",
+    success="#10B981",
+    warn="#F59E0B",
+    danger="#EF4444",
+    purple="#8B5CF6",
+    bar_track="#1E293B",
+    console_bg="#050811",
+    console_text="#38BDF8",
+    nav_hover="#1E293B",
+    nav_active_bg="#1E3A8A",
+    progress_bg="#1E293B",
 )
 
 LIGHT = dict(
-    app_bg="#F1F5F9", sidebar_bg="#FFFFFF", card_bg="#FFFFFF",
-    card_bg2="#F8FAFC", input_bg="#F8FAFC", border="#E2E8F0",
-    border2="#CBD5E1", text="#0F172A", text_sub="#475569",
-    text_muted="#94A3B8", accent="#2563EB", accent_dark="#1D4ED8",
-    accent_glow="#60A5FA", success="#059669", warn="#D97706",
-    danger="#DC2626", purple="#7C3AED", bar_track="#E2E8F0",
-    console_bg="#0F172A", console_text="#38BDF8",
-    nav_hover="#F1F5F9", nav_active_bg="#DBEAFE", progress_bg="#E2E8F0",
+    app_bg="#F8FAFC",
+    sidebar_bg="#FFFFFF",
+    card_bg="#FFFFFF",
+    card_bg2="#F1F5F9",
+    input_bg="#FFFFFF",
+    border="#E2E8F0",
+    border2="#CBD5E1",
+    text="#0F172A",
+    text_sub="#475569",
+    text_muted="#94A3B8",
+    accent="#2563EB",
+    accent_dark="#1D4ED8",
+    accent_glow="#60A5FA",
+    success="#059669",
+    warn="#D97706",
+    danger="#DC2626",
+    purple="#7C3AED",
+    bar_track="#E2E8F0",
+    console_bg="#0F172A",
+    console_text="#38BDF8",
+    nav_hover="#F1F5F9",
+    nav_active_bg="#DBEAFE",
+    progress_bg="#E2E8F0",
 )
 
 INDIAN_FIRST_NAMES = [
     "Aarav", "Rohan", "Aditya", "Vihaan", "Arjun", "Kabir", "Aryan", "Reyansh",
-    "Siddhesh", "Ananya", "Diya", "Isha", "Rhea", "Pooja", "Priya", "Neha",
+    "Ananya", "Diya", "Isha", "Rhea", "Pooja", "Priya", "Neha",
     "Kunal", "Rahul", "Varun", "Vikram", "Sneha", "Tanvi", "Sanya", "Kavya",
     "Amit", "Nikhil", "Gaurav", "Suresh", "Manish", "Deepak", "Shreya", "Meera"
 ]
 
 INDIAN_LAST_NAMES = [
-    "Patil", "Sharma", "Verma", "Gupta", "Malhotra", "Mehta", "Chopra", "Kulkarni",
+    "Sharma", "Verma", "Gupta", "Malhotra", "Mehta", "Chopra", "Kulkarni",
     "Joshi", "Deshmukh", "Deshpande", "Bhatia", "Reddy", "Nair", "Iyer", "Rao",
     "Kapoor", "Khan", "Singh", "Yadav", "Pandey", "Chauhan", "Agarwal", "Bansal"
 ]
@@ -69,17 +105,14 @@ INDIAN_CITIES = [
     "Ahmedabad", "Jaipur", "Surat", "Lucknow", "Nagpur", "Indore", "Thane", "Nashik"
 ]
 
-INDIAN_PETS = [
-    "Bruno", "Simba", "Rocky", "Leo", "Tiger", "Max", "Buddy", "Sheru", "Tommy", "Coco"
-]
-
+INDIAN_PETS = ["Bruno", "Simba", "Rocky", "Leo", "Tiger", "Max", "Buddy", "Sheru", "Tommy", "Coco"]
 INDIAN_COLORS = ["Blue", "Black", "Red", "Green", "White", "Saffron", "Navy", "Gold"]
 INDIAN_SPORTS = ["Cricket", "Football", "Badminton", "Kabaddi", "Chess", "Tennis", "Hockey"]
 RELATIONS = ["Spouse", "Child", "Sibling", "Parent", "Close Friend", "Other"]
 
 def _qss(t: dict) -> str:
     return f"""
-QMainWindow, QWidget {{
+QMainWindow, QWidget#main_bg {{
     background-color: {t['app_bg']};
     color: {t['text']};
     font-family: "Segoe UI", Arial, sans-serif;
@@ -88,6 +121,15 @@ QFrame#sidebar {{
     background-color: {t['sidebar_bg']};
     border-right: 1px solid {t['border']};
 }}
+QFrame#sidebar QWidget {{
+    background-color: transparent;
+    background: transparent;
+}}
+QFrame#sidebar QLabel {{
+    background-color: transparent;
+    background: transparent;
+}}
+
 QFrame#card {{
     background-color: {t['card_bg']};
     border: 1px solid {t['border']};
@@ -98,6 +140,7 @@ QFrame#card2 {{
     border: 1px solid {t['border']};
     border-radius: 8px;
 }}
+
 QLabel {{
     color: {t['text']};
     background: transparent;
@@ -126,7 +169,7 @@ QLabel#kpi_success {{ font-size: 17px; font-weight: 700; color: {t['success']}; 
 QLabel#kpi_warn {{ font-size: 17px; font-weight: 700; color: {t['warn']}; }}
 QLabel#kpi_purple {{ font-size: 17px; font-weight: 700; color: {t['purple']}; }}
 
-QLineEdit, QComboBox {{
+QLineEdit {{
     background-color: {t['input_bg']};
     border: 1px solid {t['border2']};
     border-radius: 7px;
@@ -135,22 +178,66 @@ QLineEdit, QComboBox {{
     padding: 6px 10px;
     selection-background-color: {t['accent']};
 }}
-QLineEdit:focus, QComboBox:focus {{
+QLineEdit:focus {{
+    border-color: {t['accent']};
+    background-color: {t['card_bg']};
+}}
+
+QComboBox {{
+    background-color: {t['input_bg']};
+    border: 1.5px solid {t['border2']};
+    border-radius: 7px;
+    color: {t['text']};
+    font-size: 12px;
+    font-weight: 600;
+    padding: 6px 12px;
+    min-height: 20px;
+}}
+QComboBox:hover {{
+    border-color: {t['accent']};
+}}
+QComboBox:focus {{
     border-color: {t['accent']};
     background-color: {t['card_bg']};
 }}
 QComboBox::drop-down {{
-    border: none;
-    width: 24px;
+    subcontrol-origin: padding;
+    subcontrol-position: top right;
+    width: 26px;
+    border-left: 1px solid {t['border']};
+    border-top-right-radius: 7px;
+    border-bottom-right-radius: 7px;
+    background-color: {t['card_bg2']};
+}}
+QComboBox::down-arrow {{
+    image: none;
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+    border-top: 5px solid {t['text_sub']};
+    margin-right: 2px;
 }}
 QComboBox QAbstractItemView {{
     background-color: {t['card_bg']};
     color: {t['text']};
+    border: 1px solid {t['border2']};
+    border-radius: 8px;
+    padding: 4px;
+    outline: 0px;
     selection-background-color: {t['accent']};
     selection-color: #FFFFFF;
-    border: 1px solid {t['border']};
-    border-radius: 6px;
-    padding: 4px;
+}}
+QComboBox QAbstractItemView::item {{
+    padding: 6px 10px;
+    border-radius: 4px;
+    min-height: 22px;
+}}
+QComboBox QAbstractItemView::item:hover {{
+    background-color: {t['nav_hover']};
+    color: {t['text']};
+}}
+QComboBox QAbstractItemView::item:selected {{
+    background-color: {t['accent']};
+    color: #FFFFFF;
 }}
 
 QSlider::groove:horizontal {{
@@ -396,7 +483,7 @@ class BarChart(QWidget):
         if not self._data:
             p.setPen(self._tc)
             p.setFont(QFont("Segoe UI", 11))
-            p.drawText(QRect(0, 0, W, H), Qt.AlignmentFlag.AlignCenter, "No analysis data loaded yet.")
+            p.drawText(QRect(0, 0, W, H), int(Qt.AlignmentFlag.AlignCenter), "No analysis data loaded yet.")
             p.end()
             return
 
@@ -417,7 +504,7 @@ class BarChart(QWidget):
             y = pad + i * (bh + gap)
             p.setFont(fl)
             p.setPen(self._tc)
-            p.drawText(QRect(0, y, lw - 6, bh), Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter, str(lbl)[:14])
+            p.drawText(QRect(0, y, lw - 6, bh), int(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter), str(lbl)[:14])
             track = QRect(lw, y, barea, bh)
             p.setBrush(self._track)
             p.setPen(Qt.PenStyle.NoPen)
@@ -425,16 +512,16 @@ class BarChart(QWidget):
 
             fw = int(barea * (val / mv))
             if fw > 3:
-                fill = QRect(lw, y, fw, bh)
-                g = QLinearGradient(fill.topLeft(), fill.topRight())
+                # Float coordinates prevent TypeError: argument 1 has unexpected type 'QPoint'
+                g = QLinearGradient(float(lw), float(y), float(lw + fw), float(y))
                 g.setColorAt(0, self._bar)
                 g.setColorAt(1, self._bar.lighter(135))
                 p.setBrush(QBrush(g))
-                p.drawRoundedRect(fill, 3, 3)
+                p.drawRoundedRect(QRect(lw, y, fw, bh), 3, 3)
 
             p.setFont(fb)
             p.setPen(self._vc)
-            p.drawText(QRect(lw + barea + 6, y, vw - 4, bh), Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter, f"{int(val):,}")
+            p.drawText(QRect(lw + barea + 6, y, vw - 4, bh), int(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter), f"{int(val):,}")
         p.end()
 
 
@@ -468,7 +555,7 @@ class DonutChart(QWidget):
         if not self._data:
             p.setPen(self._tc)
             p.setFont(QFont("Segoe UI", 11))
-            p.drawText(QRect(0, 0, W, H), Qt.AlignmentFlag.AlignCenter, "No pattern data available.")
+            p.drawText(QRect(0, 0, W, H), int(Qt.AlignmentFlag.AlignCenter), "No pattern data available.")
             p.end()
             return
 
@@ -487,7 +574,7 @@ class DonutChart(QWidget):
 
         p.setPen(self._tc)
         p.setFont(QFont("Segoe UI", 10))
-        p.drawText(QRect(cx - ir, cy - ir, ir * 2, ir * 2), Qt.AlignmentFlag.AlignCenter, f"{len(self._data)}\nfactors")
+        p.drawText(QRect(cx - ir, cy - ir, ir * 2, ir * 2), int(Qt.AlignmentFlag.AlignCenter), f"{len(self._data)}\nfactors")
 
         ly = cy + r + 10
         iw = W // max(len(self._data), 1)
@@ -499,7 +586,7 @@ class DonutChart(QWidget):
             p.setPen(Qt.PenStyle.NoPen)
             p.drawEllipse(lx, ly + 3, 8, 8)
             p.setPen(self._tc)
-            p.drawText(QRect(lx + 12, ly, iw - 14, 18), Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter, f"{lbl}: {val:.0f}%")
+            p.drawText(QRect(lx + 12, ly, iw - 14, 18), int(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter), f"{lbl}: {val:.0f}%")
         p.end()
 
 
@@ -675,25 +762,28 @@ class CipherForgeWindow(QMainWindow):
         vl.setSpacing(4)
 
         brow = QWidget()
+        brow.setStyleSheet("background: transparent; border: none;")
         bl = QHBoxLayout(brow)
         bl.setContentsMargins(4, 0, 0, 0)
         bl.setSpacing(10)
 
         self._logo_lbl = QLabel()
         self._logo_lbl.setFixedSize(46, 46)
-        self._logo_lbl.setStyleSheet("background: transparent;")
+        self._logo_lbl.setStyleSheet("background: transparent; border: none;")
         self._load_brand_logo()
         bl.addWidget(self._logo_lbl)
 
         bcol = QWidget()
+        bcol.setStyleSheet("background: transparent; border: none;")
         bv = QVBoxLayout(bcol)
         bv.setContentsMargins(0, 0, 0, 0)
         bv.setSpacing(1)
         t1 = QLabel("CipherForge")
         t1.setObjectName("h1")
-        t1.setStyleSheet("font-size: 17px; font-weight: 700;")
+        t1.setStyleSheet("background: transparent; font-size: 17px; font-weight: 700;")
         t2 = QLabel("Wordlist Studio v2.6")
         t2.setObjectName("muted")
+        t2.setStyleSheet("background: transparent;")
         bv.addWidget(t1)
         bv.addWidget(t2)
         bl.addWidget(bcol)
@@ -708,7 +798,7 @@ class CipherForgeWindow(QMainWindow):
             ("⚡  Generator Engine", 0),
             ("📊  Wordlist Analytics", 1),
             ("🔐  Entropy Inspector", 2),
-            ("📖  Engine Guide & Rules", 3)
+            ("📖  Engine Guide", 3)
         ]
         for label, idx in nav_items:
             btn = QPushButton(label)
@@ -816,12 +906,20 @@ class CipherForgeWindow(QMainWindow):
         hrow.addWidget(hl)
         hrow.addStretch()
 
-        btn_demo = QPushButton("✨ Fill Indian Demo Profile")
+        btn_demo = QPushButton("✨ Fill Demo Details")
         btn_demo.setObjectName("btn_ghost")
         btn_demo.setFixedHeight(32)
         btn_demo.setCursor(Qt.CursorShape.PointingHandCursor)
         btn_demo.clicked.connect(self._fill_demo)
         hrow.addWidget(btn_demo)
+
+        btn_clear = QPushButton("🗑️ Clear Details")
+        btn_clear.setObjectName("btn_ghost")
+        btn_clear.setFixedHeight(32)
+        btn_clear.setCursor(Qt.CursorShape.PointingHandCursor)
+        btn_clear.clicked.connect(self._clear_details)
+        hrow.addWidget(btn_clear)
+
         vl.addLayout(hrow)
 
         self._inputs = {}
@@ -831,36 +929,36 @@ class CipherForgeWindow(QMainWindow):
         pg.setSpacing(12)
 
         self._inputs["name"] = QLineEdit()
-        self._inputs["name"].setPlaceholderText("e.g. Aarav, Rahul, Siddhesh")
+        self._inputs["name"].setPlaceholderText("E.g. Aarav")
         pg.addWidget(_field("First Name *", self._inputs["name"]), 0, 0)
 
         self._inputs["last"] = QLineEdit()
-        self._inputs["last"].setPlaceholderText("e.g. Patil, Sharma, Deshmukh")
+        self._inputs["last"].setPlaceholderText("E.g. Sharma")
         pg.addWidget(_field("Last Name", self._inputs["last"]), 0, 1)
 
         self._inputs["year"] = QLineEdit()
-        self._inputs["year"].setPlaceholderText("e.g. 1995, 2001 (4 digits)")
+        self._inputs["year"].setPlaceholderText("E.g. 1995")
         pg.addWidget(_field("Birth Year *", self._inputs["year"]), 1, 0)
 
         self._inputs["city"] = QLineEdit()
-        self._inputs["city"].setPlaceholderText("e.g. Mumbai, Pune, Delhi")
+        self._inputs["city"].setPlaceholderText("E.g. Mumbai")
         pg.addWidget(_field("City / Location", self._inputs["city"]), 1, 1)
 
         self._inputs["pet"] = QLineEdit()
-        self._inputs["pet"].setPlaceholderText("e.g. Bruno, Rocky, Simba")
+        self._inputs["pet"].setPlaceholderText("E.g. Bruno")
         pg.addWidget(_field("Pet Name", self._inputs["pet"]), 2, 0)
 
         self._inputs["color"] = QLineEdit()
-        self._inputs["color"].setPlaceholderText("e.g. Blue, Saffron, Black")
+        self._inputs["color"].setPlaceholderText("E.g. Blue")
         pg.addWidget(_field("Favorite Color", self._inputs["color"]), 2, 1)
 
         self._inputs["sport"] = QLineEdit()
-        self._inputs["sport"].setPlaceholderText("e.g. Cricket, Football, Chess")
+        self._inputs["sport"].setPlaceholderText("E.g. Cricket")
         pg.addWidget(_field("Favorite Sport", self._inputs["sport"]), 3, 0)
 
-        self._inputs["output"] = QLineEdit()
-        self._inputs["output"].setPlaceholderText("e.g. aarav_wordlist.txt (Saved in /generated_wordlists/)")
-        pg.addWidget(_field("💾 Output Filename", self._inputs["output"], "Saved inside 'generated_wordlists/' directory"), 3, 1)
+        self._inputs["custom_phrases"] = QLineEdit()
+        self._inputs["custom_phrases"].setPlaceholderText("E.g. Welcome@123")
+        pg.addWidget(_field("Custom Passphrases / Keywords", self._inputs["custom_phrases"], "Known words or phrases (comma-separated)"), 3, 1)
 
         pg.setColumnStretch(0, 1)
         pg.setColumnStretch(1, 1)
@@ -877,7 +975,7 @@ class CipherForgeWindow(QMainWindow):
         fam_v.setContentsMargins(14, 8, 14, 12)
         fam_v.setSpacing(10)
 
-        fam_desc = QLabel("Add family members (spouse, children, siblings) and custom passphrases to expand the combination matrix:")
+        fam_desc = QLabel("Add family members (spouse, children, siblings) to enrich permutations:")
         fam_desc.setObjectName("muted")
         fam_v.addWidget(fam_desc)
 
@@ -886,11 +984,11 @@ class CipherForgeWindow(QMainWindow):
 
         self._combo_relation = QComboBox()
         self._combo_relation.addItems(RELATIONS)
-        self._combo_relation.setFixedWidth(130)
+        self._combo_relation.setFixedWidth(135)
         self._combo_relation.setFixedHeight(34)
 
         self._in_fam_name = QLineEdit()
-        self._in_fam_name.setPlaceholderText("Enter family member name (e.g. Priya, Ananya)...")
+        self._in_fam_name.setPlaceholderText("E.g. Priya")
         self._in_fam_name.setFixedHeight(34)
 
         btn_add_fam = QPushButton("＋ Add Member")
@@ -911,16 +1009,12 @@ class CipherForgeWindow(QMainWindow):
         self._fam_badge_layout.addStretch()
         fam_v.addWidget(self._fam_badge_box)
 
-        cust_desc = QLabel("Custom Passwords or Known Phrases (comma-separated):")
-        cust_desc.setObjectName("muted")
-        fam_v.addWidget(cust_desc)
+        self._inputs["output"] = QLineEdit()
+        self._inputs["output"].setPlaceholderText("E.g. aarav_wordlist.txt")
+        self._inputs["output"].setFixedHeight(36)
+        fam_v.addWidget(_field("💾 Output Wordlist Filename", self._inputs["output"], "Saved automatically inside 'generated_wordlists/' directory"))
 
-        self._in_custom_phrases = QLineEdit()
-        self._in_custom_phrases.setPlaceholderText("e.g. Welcome@123, India2024, ilovecricket, maharashtra")
-        self._in_custom_phrases.setFixedHeight(36)
-        fam_v.addWidget(self._in_custom_phrases)
-
-        vl.addWidget(_card("👥  Family Members & Custom Phrases", fam_card_body, "#8B5CF6"))
+        vl.addWidget(_card("👥  Family Members & Output File Configuration", fam_card_body, "#8B5CF6"))
 
         opts_body = QWidget()
         og = QGridLayout(opts_body)
@@ -1167,7 +1261,7 @@ class CipherForgeWindow(QMainWindow):
         tl.setSpacing(10)
 
         self._live_in = QLineEdit()
-        self._live_in.setPlaceholderText("Type any password to test Shannon entropy in real time... (e.g. Aarav@1995!#)")
+        self._live_in.setPlaceholderText("E.g. Aarav@1995")
         self._live_in.setFixedHeight(38)
         self._live_in.textChanged.connect(self._live_test)
         tl.addWidget(self._live_in, 1)
@@ -1249,38 +1343,51 @@ class CipherForgeWindow(QMainWindow):
         vl.setContentsMargins(20, 16, 20, 20)
         vl.setSpacing(14)
 
-        hl = QLabel("📖  Engine Architecture & Permutation Rules")
+        hl = QLabel("📖  Engine Guide")
         hl.setObjectName("h1")
         vl.addWidget(hl)
 
+        top_banner = QFrame()
+        top_banner.setObjectName("card2")
+        tb_lay = QVBoxLayout(top_banner)
+        tb_lay.setContentsMargins(16, 14, 16, 14)
+        tb_lay.setSpacing(4)
+        tb_title = QLabel("⚡ CipherForge 3-Stage Synthesis Architecture")
+        tb_title.setStyleSheet("font-size: 13px; font-weight: 700; color: #38BDF8;")
+        tb_body = QLabel("CipherForge uses targeted psychological anchor profiling to generate high-probability credential dictionaries for security auditing, authorized penetration testing, and password resilience benchmarking.")
+        tb_body.setWordWrap(True)
+        tb_body.setStyleSheet("font-size: 11px; color: #94A3B8; line-height: 1.4;")
+        tb_lay.addWidget(tb_title)
+        tb_lay.addWidget(tb_body)
+        vl.addWidget(top_banner)
+
         stages = [
-            ("Stage 1: Structural Roots", "#2563EB", [
-                "Name + Birth Year (aarav1995, aarav95)",
-                "Name + Last Name (aaravpatil, patilaarav)",
-                "Name + Pet / City (aaravbruno, aaravmumbai)",
-                "Family Members (spouse, kids, siblings)",
-                "Custom Phrases & passphrases inserted directly"
+            ("Stage 1: Seed Matrix & Semantic Roots", "#2563EB", [
+                "Primary Tokens: First name, last name, birth year, pet, city, color, sport.",
+                "Family Semantic Links: Cross-connects spouse, child, sibling anchors.",
+                "Custom Phrases: Inserts known passphrases, keywords, and space-stripped variants.",
+                "High-Probability Combos: Name+Year, Name+Last, Pet+Year, City+Year.",
+                "Special Separators: Name + Special (!, @, #, $, %, &) + Birth Year."
             ]),
-            ("Stage 2: Mutation & Leetspeak", "#10B981", [
-                "Case: lowercase, UPPERCASE, Capitalized",
-                "Alternating: aLtErNaTiNg, AlTeRnAtInG",
-                "Leet substitutions: a→@,4  e→3  i→1,!  o→0",
-                "s→$,5  t→7,+  b→8  g→9  l→1  z→2",
-                "Controlled permutation depth (20–200 variants)"
+            ("Stage 2: Mutation & Leetspeak Matrix", "#10B981", [
+                "5 Case Variants: lowercase, UPPERCASE, Capitalized, aLtErNaTiNg, ALtErNaTiNg.",
+                "Smart Leet Substitutions: a→@,4 | e→3 | i→1,! | o→0 | s→$,5 | t→7,+ | b→8 | g→9 | l→1 | z→2.",
+                "Bounded Permutations: Controls combinatorial growth via Leet Depth slider (20–200 variants/root).",
+                "Non-alphanumeric preservation: Preserves digits and special characters during leet transforms."
             ]),
-            ("Stage 3: Affix Synthesis", "#F59E0B", [
-                "7 System Prefixes: admin_, user_, root_, hack_...",
-                "22 High-Prob Suffixes: 123, 007, 69, 420, 2024...",
-                "Special Suffixes: !, @, #, $, %, &, *, ?, .",
-                "Birth Year combinations appended dynamically",
-                "Length boundary enforcement: [Min, Max]"
+            ("Stage 3: Cartesian Affix Synthesis", "#F59E0B", [
+                "System Prefixes: admin_, user_, root_, hack_, pass_, secret_ (plus plain root).",
+                "22 High-Frequency Suffixes: 123, 007, 69, 420, 2024, 2025, 2026, !, @, #, $, %, &, *, ?, .",
+                "Dynamic Year Injections: Appends target's full 4-digit birth year and 2-digit abbreviation.",
+                "Strict Length Boundary: Discards all candidates outside [Min Length, Max Length].",
+                "Deduplication: Employs Python set hash tables for instantaneous duplicate elimination."
             ]),
-            ("Entropy & Password Security", "#8B5CF6", [
-                "Shannon Entropy formula: H = -Σ p(c) · log₂(p(c))",
-                "Weak (< 2.0 bits): Low entropy, easily brute-forced",
-                "Fair (2.0–3.0 bits): Standard lowercase+numbers",
-                "Strong (3.0–3.8 bits): Mixed alphanumeric + symbols",
-                "Excellent (> 3.8 bits): Maximum password resistance"
+            ("Stage 4: Shannon Entropy & Resilience Rating", "#8B5CF6", [
+                "Mathematical Formula: Shannon Entropy H = -Σ p(c) · log₂(p(c)) [bits/character].",
+                "Weak Tier (< 2.0 bits): Low character variety; cracked in seconds by brute-force.",
+                "Fair Tier (2.0–3.0 bits): Standard lowercase alphanumeric combinations.",
+                "Strong Tier (3.0–3.8 bits): High complexity mixed alphanumeric with symbols.",
+                "Excellent Tier (> 3.8 bits): Maximum bit entropy; optimal resistance to dictionary attacks."
             ]),
         ]
 
@@ -1295,6 +1402,7 @@ class CipherForgeWindow(QMainWindow):
 
             for b in bullets:
                 b_lbl = QLabel(f"•  {b}")
+                b_lbl.setWordWrap(True)
                 b_lbl.setStyleSheet("font-size: 11px; line-height: 1.4;")
                 cv.addWidget(b_lbl)
 
@@ -1308,11 +1416,11 @@ class CipherForgeWindow(QMainWindow):
         tv.setContentsMargins(16, 14, 16, 14)
         tv.setSpacing(4)
 
-        t_h = QLabel("💡  Security Engineer Tip:")
-        t_h.setStyleSheet("font-weight: 700; color: #38BDF8; font-size: 12px;")
-        t_b = QLabel("When auditing user passwords, real-world credentials overwhelmingly cluster around name + birth-year + special symbols (e.g. Aarav@1995 or Rahul!2001). CipherForge synthesizes these high-probability psychological anchors while pruning impossible lengths.")
+        t_h = QLabel("💡  Security Auditor's Cheat Sheet:")
+        t_h.setStyleSheet("font-weight: 700; color: #10B981; font-size: 12px;")
+        t_b = QLabel("1. Focus length boundaries between 8 and 16 characters for enterprise compliance audits.\n2. Add spouse and child names to test social engineering password patterns.\n3. Use 'Export Selected Tier' to extract only Strong & Excellent candidates for targeted hash verification.")
         t_b.setWordWrap(True)
-        t_b.setStyleSheet("font-size: 11px; color: #94A3B8;")
+        t_b.setStyleSheet("font-size: 11px; color: #94A3B8; line-height: 1.5;")
 
         tv.addWidget(t_h)
         tv.addWidget(t_b)
@@ -1337,6 +1445,8 @@ class CipherForgeWindow(QMainWindow):
         self._inputs["city"].setText(city)
         self._inputs["color"].setText(color)
         self._inputs["sport"].setText(sport)
+        self._inputs["custom_phrases"].setText(f"Welcome@{year}")
+        self._inputs["output"].setText(f"{first.lower()}_wordlist.txt")
 
         self._family_entries = []
         rel_choice = random.choice(["Spouse", "Sibling", "Child"])
@@ -1344,9 +1454,26 @@ class CipherForgeWindow(QMainWindow):
         self._family_entries.append(f"{rel_choice}: {fam_name}")
         self._refresh_family_badges()
 
-        self._in_custom_phrases.setText(f"{first}@{year}, {city}Express")
-        self._inputs["output"].setText(f"{first.lower()}_{last.lower()}_list.txt")
-        self._log(f"✨  Loaded random Indian profile: {first} {last} (DOB: {year}, {city})")
+        self._log(f"✨  Loaded random demo profile: {first} {last} (DOB: {year}, {city})")
+
+    def _clear_details(self):
+        for e in self._inputs.values():
+            e.clear()
+        self._family_entries.clear()
+        self._refresh_family_badges()
+        self._in_min.setText("6")
+        self._in_max.setText("20")
+        self._leet_s.setValue(80)
+        self._pbar.setValue(0)
+        self._status_lbl.setText("Ready to generate.")
+        self._kw.set_val("0")
+        self._kt.set_val("0.00s")
+        self._ks.set_val("0")
+        self._kf.set_val("—")
+        self._side_status.setText("● Engine Ready")
+        self._side_status.setStyleSheet("color: #10B981; font-size: 11px; font-weight: 600;")
+        self._side_words.setText("0 words generated")
+        self._log("🗑️  Cleared all profile fields and configuration details.")
 
     def _collect_profile(self) -> dict | None:
         data = {k: e.text().strip() for k, e in self._inputs.items()}
@@ -1355,7 +1482,7 @@ class CipherForgeWindow(QMainWindow):
             return None
         year = data.get("year", "")
         if not year or not year.isdigit() or len(year) != 4:
-            self._log("✖ Error: Birth Year must be exactly 4 digits (e.g. 1995).")
+            self._log("✖ Error: Birth Year must be exactly 4 digits (E.g. 1995).")
             return None
 
         try:
@@ -1378,7 +1505,7 @@ class CipherForgeWindow(QMainWindow):
                 fam_names.append(entry.strip())
         data["family_members"] = fam_names
 
-        cust_str = self._in_custom_phrases.text().strip()
+        cust_str = self._inputs.get("custom_phrases", QLineEdit()).text().strip()
         if cust_str:
             phrases = [p.strip() for p in cust_str.split(",") if p.strip()]
             data["custom_phrases"] = phrases
@@ -1392,10 +1519,14 @@ class CipherForgeWindow(QMainWindow):
         p = self._collect_profile()
         if not p:
             return
-        est = estimate_count(p, p["leet_max"])
+        est = estimate_count(p, p["leet_max"], p["min_len"], p["max_len"])
         bases = build_base_candidates(p)
-        self._log(f"🔢  Forecast: {len(bases)} root combinations → ~{est:,} candidate checks.")
-        self._status_lbl.setText(f"Estimated: ~{est:,} combinations")
+
+        self._kw.set_val(f"~{est:,}")
+        self._kf.set_val("Forecast")
+        self._status_lbl.setText(f"Estimated Candidates: ~{est:,} words (within {p['min_len']}–{p['max_len']} chars)")
+        self._side_words.setText(f"~{est:,} est. words")
+        self._log(f"🔢  Forecast: {len(bases)} structural roots → ~{est:,} unique words estimate.")
 
     def _start_generation(self):
         p = self._collect_profile()
@@ -1531,7 +1662,7 @@ class CipherForgeWindow(QMainWindow):
             col = {"Weak": "#EF4444", "Fair": "#F59E0B", "Strong": "#10B981", "Excellent": "#8B5CF6"}.get(tr, "#94A3B8")
             for c, txt in enumerate([str(i + 1), word, f"{score:.4f}", tr]):
                 item = QTableWidgetItem(txt)
-                item.setTextAlignment(Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft)
+                item.setTextAlignment(int(Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft))
                 if c == 3:
                     item.setForeground(QColor(col))
                 self._table.setItem(i, c, item)
