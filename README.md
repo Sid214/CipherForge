@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="cipherforge/assets/logo.png" width="135" height="135" alt="CipherForge Logo" />
+</p>
+
 # CipherForge
 
 <div align="center">
