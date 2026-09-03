@@ -1,13 +1,12 @@
 <div align="center">
 
-<a href="#cipherforge">
-  <img src="cipherforge/assets/title.svg" alt="CipherForge" width="410" />
-</a>
+# <img src="cipherforge/assets/logo.png" width="36" height="36" align="absmiddle" alt="CipherForge Logo" /> <span style="font-family: 'Arial Black', 'Trebuchet MS', Arial, sans-serif; letter-spacing: 1.5px;">CIPHERFORGE</span>
 
-<p align="center">
-  <strong style="font-size: 16px;">Targeted Credential Permutation & Entropy Analysis Suite</strong><br/>
-  <em>A desktop application and scriptable CLI tool engineered for security auditors, penetration testers, and security researchers to benchmark credential resilience using targeted psychological anchor profiling.</em>
-</p><br/>
+### **Targeted Credential Permutation & Entropy Analysis Suite**
+
+*A desktop application and scriptable CLI tool engineered for security auditors, penetration testers, and security researchers to benchmark credential resilience using targeted psychological anchor profiling.*
+
+<br/>
 
 [![Python](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)
 [![GUI Framework](https://img.shields.io/badge/GUI-PyQt6-green.svg)](https://www.riverbankcomputing.com/software/pyqt/)
