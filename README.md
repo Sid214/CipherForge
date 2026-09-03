@@ -1,20 +1,18 @@
-<p align="center">
-  <img src="cipherforge/assets/logo.png" width="135" height="135" alt="CipherForge Logo" />
-</p>
-
-# CipherForge
-
 <div align="center">
+
+# <img src="cipherforge/assets/logo.png" width="40" height="40" valign="middle" alt="CipherForge Logo" /> CipherForge
 
 **Targeted Credential Permutation & Entropy Analysis Suite**
 
-*A desktop application and CLI tool engineered for security auditors, penetration testers, and security researchers to benchmark credential resilience using targeted psychological anchor profiling.*
+*A desktop application and scriptable CLI tool engineered for security auditors, penetration testers, and security researchers to benchmark credential resilience using targeted psychological anchor profiling.*
 
-[![Python](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)
-[![GUI Framework](https://img.shields.io/badge/GUI-PyQt6-green.svg)](https://www.riverbankcomputing.com/software/pyqt/)
-[![Architecture](https://img.shields.io/badge/Engine-3--Stage%20Synthesis-orange.svg)]()
-[![License](https://img.shields.io/badge/License-MIT-purple.svg)](LICENSE)
-[![Author](https://img.shields.io/badge/Author-Siddhesh-brightgreen.svg)]()
+<br/>
+
+[![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?style=flat-square&logo=python&logoColor=white)](https://www.python.org/)
+[![GUI Framework](https://img.shields.io/badge/GUI-PyQt6-41CD52?style=flat-square&logo=qt&logoColor=white)](https://www.riverbankcomputing.com/software/pyqt/)
+[![Engine](https://img.shields.io/badge/Engine-3--Stage%20Synthesis-FF6B6B?style=flat-square)]()
+[![License: MIT](https://img.shields.io/badge/License-MIT-8A2BE2?style=flat-square)](LICENSE)
+[![Author](https://img.shields.io/badge/Author-Siddhesh-00C49F?style=flat-square)]()
 
 </div>
 
@@ -37,7 +35,7 @@ Standard brute-force credential audits frequently rely on static public breach d
 - **Live Telemetry & Metrics**: Real-time visualization of word length distributions, character frequency distributions, and structural pattern compositions.
 - **Sub-Millisecond Abort Handling**: Pipeline cancellation signals are checked every 20 to 100 iterations, immediately halting execution upon user request with zero partial disk writes.
 - **Enterprise-Grade PyQt6 Interface**: Includes native Light and Dark modes (defaulting to Light Mode), a custom-styled telemetry terminal with aligned logging, dynamic downward-expanding dropdowns, touchpad-isolated slider controls, and full DPI scaling.
-- **Unified Dual-Mode Engine**: Run as an interactive desktop suite (`cipherforge.py`) or headlessly within automated testing pipelines (`cipherforge.py --cli`).
+- **Unified Dual-Mode Engine**: Run as an interactive desktop suite (`cipherforge.py`) or headlessly within automated testing pipelines (`cipherforge.py --name ... --year ...`).
 
 ---
 
@@ -121,6 +119,7 @@ CipherForge/
 |-- generated_wordlists/          # Standard storage directory for generated dictionaries
 |-- cipherforge.py                # Single unified entrypoint (GUI launcher or CLI engine)
 |-- requirements.txt              # Production dependency specifications
+|-- LICENSE                       # Official MIT License
 `-- README.md                     # Comprehensive technical documentation
 ```
 
@@ -184,7 +183,10 @@ Run automated, headless wordlist generation in security pipelines:
 python cipherforge.py --name Aarav --year 1995 --pet Bruno
 
 # Comprehensive profile with length boundaries and custom output path
-python cipherforge.py --name Aarav --last Sharma --year 1995 --city Mumbai --min 8 --max 16 --leet 100 --output enterprise_audit.txt
+python cipherforge.py --name Aarav --last Sharma --year 1995 --city Mumbai --min 8 --max 16 --leet-max 100 --output enterprise_audit.txt
+
+# Generation with full post-run Shannon entropy breakdown
+python cipherforge.py --name Aarav --year 1995 --pet Bruno --analyze
 
 # Fast forecast: Estimate candidate count without writing to disk
 python cipherforge.py --name Aarav --year 1995 --count
@@ -204,9 +206,10 @@ python cipherforge.py --name Aarav --year 1995 --count
 | `--sport` | `TEXT` | Target favorite sport |
 | `--min` | `INT` | Minimum password length (default: 6) |
 | `--max` | `INT` | Maximum password length (default: 20) |
-| `--leet` | `INT` | Maximum leet substitutions per root (default: 80) |
+| `--leet-max`, `--leet` | `INT` | Maximum leet substitutions per root (default: 80) |
 | `--output` | `FILE` | Custom output filepath (.txt) |
-| `--count` | *None* | Print candidate estimate and exit |
+| `--count` | *None* | Print candidate estimate and exit without writing |
+| `--analyze` | *None* | Print post-generation Shannon entropy analysis |
 
 ---
 
@@ -251,11 +254,11 @@ Unauthorized access to computer systems, networks, or digital assets without pri
 
 ## Author & Attribution
 
-**Engineered with care &bull; Siddhesh**  
+**Engineered with care • Siddhesh**  
 *CipherForge Studio v2.6.0*
 
 ---
 
 ## License
 
-Distributed under the **MIT License**. See `LICENSE` for additional details.
+Distributed under the **MIT License**. See [LICENSE](LICENSE) for full legal text.
