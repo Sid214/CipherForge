@@ -1,4 +1,4 @@
-﻿"""
+"""
 cipherforge/core/analyzer.py
 Comprehensive, High-Accuracy Wordlist & Credential Analytics Engine.
 Accurately scores Shannon entropy, exact length distributions, character frequency,

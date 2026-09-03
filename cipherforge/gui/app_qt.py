@@ -5,12 +5,23 @@ Engineered for zero-lag responsiveness, seamless Light/Dark mode, and advanced w
 """
 from __future__ import annotations
 
+__version__ = "2.6.0"
+__author__ = "Siddhesh"
+AUTHOR = "Siddhesh"
+
 import sys
 import os
+import ctypes
+
+APP_ID = "cipherforge.wordlist.studio.v2"
+if sys.platform == "win32":
+    try:
+        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(APP_ID)
+    except Exception:
+        pass
 import random
 import datetime
 import threading
-from typing import Callable
 
 from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QFrame, QVBoxLayout, QHBoxLayout,
@@ -21,7 +32,7 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtCore import Qt, QThread, pyqtSignal, QRect, QSize, QTimer, QPoint
 from PyQt6.QtGui import (
-    QColor, QPainter, QLinearGradient, QFont, QPixmap, QBrush, QPen, QCursor, QPalette
+    QColor, QPainter, QLinearGradient, QFont, QPixmap, QBrush, QPalette, QIcon
 )
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
@@ -111,6 +122,22 @@ INDIAN_COLORS = ["Blue", "Black", "Red", "Green", "White", "Saffron", "Navy", "G
 INDIAN_SPORTS = ["Cricket", "Football", "Badminton", "Kabaddi", "Chess", "Tennis", "Hockey"]
 RELATIONS = ["Spouse", "Child", "Sibling", "Parent", "Close Friend", "Other"]
 
+
+
+class ScrollIgnoringSlider(QSlider):
+    """
+    A horizontal QSlider that forwards wheel and touchpad scroll events to the parent
+    scroll area, allowing the page to scroll naturally, while preventing the slider
+    value from being modified by two-finger touchpad scrolling.
+    """
+    def wheelEvent(self, event):
+        event.ignore()
+        p = self.parentWidget()
+        while p:
+            if isinstance(p, QScrollArea):
+                QApplication.sendEvent(p.viewport(), event)
+                return
+            p = p.parentWidget()
 
 class DropdownComboBox(QComboBox):
     """
@@ -464,9 +491,9 @@ QPlainTextEdit#console {{
     color: {t['console_text']};
     border: 1px solid {t['border']};
     border-radius: 8px;
-    font-family: "Cascadia Code", "Consolas", monospace;
+    font-family: "Cascadia Code", "Consolas", "Courier New", monospace;
     font-size: 11px;
-    padding: 8px;
+    padding: 10px 12px;
 }}
 
 /* Terminal Scrollbar: Track perfectly matches terminal background with blue thumb */
@@ -802,8 +829,8 @@ class KPICard(QFrame):
 class CipherForgeWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self._theme = DARK
-        self._is_dark = True
+        self._theme = LIGHT
+        self._is_dark = False
         self._worker = None
         self._analysis_worker = None
         self._analysis = None
@@ -815,8 +842,21 @@ class CipherForgeWindow(QMainWindow):
         self.resize(1240, 840)
         self.setMinimumSize(980, 680)
 
+        ico_path = os.path.join(ASSETS, "app_icon.ico")
+        if os.path.exists(ico_path):
+            self.setWindowIcon(QIcon(ico_path))
+
         self._build()
-        self._do_theme(DARK)
+        self._do_theme(LIGHT)
+
+    def closeEvent(self, event):
+        # Gracefully terminate background worker threads before closing
+        if self._worker and self._worker.isRunning():
+            self._worker.stop()
+            self._worker.wait(1500)
+        if self._analysis_worker and self._analysis_worker.isRunning():
+            self._analysis_worker.wait(1000)
+        event.accept()
 
     def _build(self):
         root = QWidget()
@@ -905,16 +945,16 @@ class CipherForgeWindow(QMainWindow):
 
         trow = QHBoxLayout()
         trow.setSpacing(6)
-        self._btn_dark = QPushButton("🌙 Dark")
         self._btn_light = QPushButton("☀️ Light")
-        for b in (self._btn_dark, self._btn_light):
+        self._btn_dark = QPushButton("🌙 Dark")
+        for b in (self._btn_light, self._btn_dark):
             b.setObjectName("theme_btn")
             b.setFixedHeight(30)
             b.setCursor(Qt.CursorShape.PointingHandCursor)
             trow.addWidget(b)
 
-        self._btn_dark.clicked.connect(lambda: self._do_theme(DARK))
         self._btn_light.clicked.connect(lambda: self._do_theme(LIGHT))
+        self._btn_dark.clicked.connect(lambda: self._do_theme(DARK))
         vl.addLayout(trow)
 
         vl.addStretch()
@@ -1127,7 +1167,7 @@ class CipherForgeWindow(QMainWindow):
         self._leet_lbl = QLabel("Leet Depth: 80 variants / root")
         self._leet_lbl.setObjectName("muted")
         self._leet_lbl.setStyleSheet("font-size: 11px; font-weight: 600;")
-        self._leet_s = QSlider(Qt.Orientation.Horizontal)
+        self._leet_s = ScrollIgnoringSlider(Qt.Orientation.Horizontal)
         self._leet_s.setRange(20, 200)
         self._leet_s.setValue(80)
         self._leet_s.setSingleStep(10)
@@ -1231,6 +1271,7 @@ class CipherForgeWindow(QMainWindow):
         self._console.setObjectName("console")
         self._console.setReadOnly(True)
         self._console.setFixedHeight(160)
+        self._console.appendPlainText("> Ready — CipherForge telemetry initialized.")
         lv2.addWidget(self._console)
 
         krow = QHBoxLayout()
@@ -1250,8 +1291,7 @@ class CipherForgeWindow(QMainWindow):
 
     def _clear_console(self):
         self._console.clear()
-        ts = datetime.datetime.now().strftime("%H:%M:%S")
-        self._console.appendPlainText(f"[{ts}] [SYS] Terminal initialized. Engine standby.")
+        self._console.appendPlainText("> Ready — CipherForge telemetry initialized.")
 
     def _add_family_member(self):
         rel = self._combo_relation.currentText()
@@ -1493,91 +1533,162 @@ class CipherForgeWindow(QMainWindow):
 
         page = QWidget()
         vl = QVBoxLayout(page)
-        vl.setContentsMargins(20, 16, 20, 20)
+        vl.setContentsMargins(24, 18, 24, 24)
         vl.setSpacing(14)
 
+        # Page Header
+        hdr_w = QWidget()
+        hdr_v = QVBoxLayout(hdr_w)
+        hdr_v.setContentsMargins(0, 0, 0, 0)
+        hdr_v.setSpacing(3)
         hl = QLabel("📖  Engine Guide")
         hl.setObjectName("h1")
-        vl.addWidget(hl)
+        hl.setStyleSheet("font-size: 20px; font-weight: 700;")
+        sub_hl = QLabel("Technical architecture, combinatorial generation pipeline, and mathematical entropy metrics.")
+        sub_hl.setObjectName("muted")
+        sub_hl.setStyleSheet("font-size: 12px;")
+        hdr_v.addWidget(hl)
+        hdr_v.addWidget(sub_hl)
+        vl.addWidget(hdr_w)
 
+        # Overview Banner Card
         top_banner = QFrame()
         top_banner.setObjectName("card2")
         tb_lay = QVBoxLayout(top_banner)
-        tb_lay.setContentsMargins(16, 14, 16, 14)
-        tb_lay.setSpacing(4)
-        tb_title = QLabel("⚡ CipherForge 3-Stage Synthesis Architecture")
+        tb_lay.setContentsMargins(18, 14, 18, 14)
+        tb_lay.setSpacing(6)
+        tb_title = QLabel("⚡ Targeted Anchor Profiling Architecture")
         tb_title.setStyleSheet("font-size: 13px; font-weight: 700; color: #38BDF8;")
-        tb_body = QLabel("CipherForge uses targeted psychological anchor profiling to generate high-probability credential dictionaries for security auditing, authorized penetration testing, and password resilience benchmarking.")
+        tb_body = QLabel(
+            "CipherForge models target-specific password behavior using personal semantic anchor profiling. "
+            "Rather than evaluating generic dictionary lists, the engine synthesizes high-probability candidate "
+            "permutations derived exclusively from user-supplied parameters, structured case mutations, bounded "
+            "leetspeak substitutions, and affix constraints."
+        )
         tb_body.setWordWrap(True)
-        tb_body.setStyleSheet("font-size: 11px; color: #94A3B8; line-height: 1.4;")
+        tb_body.setStyleSheet("font-size: 12px; line-height: 1.5;")
         tb_lay.addWidget(tb_title)
         tb_lay.addWidget(tb_body)
         vl.addWidget(top_banner)
 
-        stages = [
-            ("Stage 1: Seed Matrix & Semantic Roots", "#2563EB", [
-                "Primary Tokens: First name, last name, birth year, pet, city, color, sport.",
-                "Family Semantic Links: Cross-connects spouse, child, sibling anchors.",
-                "Custom Phrases: Inserts known passphrases, keywords, and space-stripped variants.",
-                "High-Probability Combos: Name+Year, Name+Last, Pet+Year, City+Year.",
-                "Special Separators: Name + Special (!, @, #, $, %, &) + Birth Year."
-            ]),
-            ("Stage 2: Mutation & Leetspeak Matrix", "#10B981", [
-                "5 Case Variants: lowercase, UPPERCASE, Capitalized, aLtErNaTiNg, ALtErNaTiNg.",
-                "Smart Leet Substitutions: a→@,4 | e→3 | i→1,! | o→0 | s→$,5 | t→7,+ | b→8 | g→9 | l→1 | z→2.",
-                "Bounded Permutations: Controls combinatorial growth via Leet Depth slider (20–200 variants/root).",
-                "Non-alphanumeric preservation: Preserves digits and special characters during leet transforms."
-            ]),
-            ("Stage 3: Cartesian Affix Synthesis", "#F59E0B", [
-                "System Prefixes: admin_, user_, root_, hack_, pass_, secret_ (plus plain root).",
-                "22 High-Frequency Suffixes: 123, 007, 69, 420, 2024, 2025, 2026, !, @, #, $, %, &, *, ?, .",
-                "Dynamic Year Injections: Appends target's full 4-digit birth year and 2-digit abbreviation.",
-                "Strict Length Boundary: Discards all candidates outside [Min Length, Max Length].",
-                "Deduplication: Employs Python set hash tables for instantaneous duplicate elimination."
-            ]),
-            ("Stage 4: Shannon Entropy & Resilience Rating", "#8B5CF6", [
-                "Mathematical Formula: Shannon Entropy H = -Σ p(c) · log₂(p(c)) [bits/character].",
-                "Weak Tier (< 2.0 bits): Low character variety; cracked in seconds by brute-force.",
-                "Fair Tier (2.0–3.0 bits): Standard lowercase alphanumeric combinations.",
-                "Strong Tier (3.0–3.8 bits): High complexity mixed alphanumeric with symbols.",
-                "Excellent Tier (> 3.8 bits): Maximum bit entropy; optimal resistance to dictionary attacks."
-            ]),
-        ]
+        # Helper for guide cards
+        def _guide_card(title: str, stripe_color: str, bullets: list[tuple[str, str]]) -> QFrame:
+            card_body = QWidget()
+            cv = QVBoxLayout(card_body)
+            cv.setContentsMargins(16, 12, 16, 14)
+            cv.setSpacing(10)
 
+            for b_title, b_desc in bullets:
+                item_w = QWidget()
+                iv = QVBoxLayout(item_w)
+                iv.setContentsMargins(0, 0, 0, 0)
+                iv.setSpacing(2)
+
+                lbl_h = QLabel(f"•  {b_title}")
+                lbl_h.setStyleSheet("font-size: 12px; font-weight: 700;")
+
+                lbl_d = QLabel(b_desc)
+                lbl_d.setWordWrap(True)
+                lbl_d.setStyleSheet("font-size: 12px; line-height: 1.45;")
+
+                iv.addWidget(lbl_h)
+                iv.addWidget(lbl_d)
+                cv.addWidget(item_w)
+
+            return _card(title, card_body, stripe_color)
+
+        # 2-Column Balanced Grid for Pipeline Stages & Quality Metrics
         grid = QGridLayout()
-        grid.setSpacing(12)
+        grid.setSpacing(14)
 
-        for idx, (title, color, bullets) in enumerate(stages):
-            card_w = QWidget()
-            cv = QVBoxLayout(card_w)
-            cv.setContentsMargins(14, 12, 14, 12)
-            cv.setSpacing(6)
+        # Stage 1: Semantic Root Matrix
+        s1_bullets = [
+            ("Target Profile Attributes", "Extracts user-supplied parameters including First Name, Last Name, Birth Year, City/Location, Pet Name, Favorite Color, and Favorite Sport."),
+            ("Relational Family Linkages", "Cross-connects target anchors with family members (Spouse, Child, Sibling, and custom relations) into compound permutations."),
+            ("Custom Keywords & Passphrases", "Incorporates explicit passphrases and keywords, including space-stripped variants and date-linked combinations."),
+            ("High-Probability Combinations", "Synthesizes structured pairings: Name+Year, Name+Last, Name+Pet, Pet+Year, City+Year, Color+Year, and Sport+Year."),
+            ("Special Character Separators", "Generates compound permutations with 9 standard separator symbols: !, @, #, $, %, &, *, ?, and ."),
+            ("Zero Generic Injections", "Generic credential tokens (such as admin, root, or pass) are never artificially introduced unless explicitly entered by the user.")
+        ]
+        c_stage1 = _guide_card("Stage 1: Semantic Root Matrix", "#2563EB", s1_bullets)
+        grid.addWidget(c_stage1, 0, 0)
 
-            for b in bullets:
-                b_lbl = QLabel(f"•  {b}")
-                b_lbl.setWordWrap(True)
-                b_lbl.setStyleSheet("font-size: 11px; line-height: 1.4;")
-                cv.addWidget(b_lbl)
+        # Stage 2: Case Mutation & Leetspeak Matrix
+        s2_bullets = [
+            ("5 Deterministic Case Variants", "Generates lowercase, UPPERCASE, Capitalized, aLtErNaTiNg, and ALtErNaTiNg variations for every base root token."),
+            ("Standard Leetspeak Substitutions", "Evaluates mapped replacements: a→@,4 | e→3 | i→1,! | o→0 | s→$,5 | t→7,+ | b→8 | g→9 | l→1 | z→2."),
+            ("Bounded Combinatorial Depth", "The Leet Depth slider constrains combinatorial growth (20 to 200 substitutions per root token) to prevent combinatorial explosion."),
+            ("Character Integrity", "Digits, punctuation, spaces, and unmapped characters are preserved intact across all mutation passes.")
+        ]
+        c_stage2 = _guide_card("Stage 2: Mutation & Leetspeak Matrix", "#10B981", s2_bullets)
+        grid.addWidget(c_stage2, 0, 1)
 
-            grid.addWidget(_card(title, card_w, color), idx // 2, idx % 2)
+        # Stage 3: Affix Synthesis & Boundary Constraints
+        s3_bullets = [
+            ("High-Frequency Suffix Rules", "Evaluates 22 common numerical sequences, years, and special characters: 123, 007, 69, 420, 2024, 2025, 2026, !, @, #, $, %, &, *, ?, ., 1990, 90, 2000, 00."),
+            ("Dynamic Birth Year Injections", "Dynamically appends the target's 4-digit birth year and 2-digit abbreviation to roots if not already present in suffixes."),
+            ("Strict Length Boundary Filtering", "Enforces configured [Min Length, Max Length] bounds (1–128 characters). Candidates outside this window are discarded."),
+            ("Hash Set Deduplication", "Employs Python set hash tables for automatic, instantaneous duplicate elimination across all permutation stages."),
+            ("Sub-Millisecond Cancellation", "Worker threads monitor cancellation signals every 20–100 roots, halting execution immediately with zero disk writes upon Abort.")
+        ]
+        c_stage3 = _guide_card("Stage 3: Affix Synthesis & Boundary Constraints", "#F59E0B", s3_bullets)
+        grid.addWidget(c_stage3, 1, 0)
 
+        # Security Evaluation: Shannon Entropy & Tier Metrics
+        s4_bullets = [
+            ("Shannon Information Entropy Formula", "Calculates character distribution complexity per candidate: H = -Σ p(c) · log₂(p(c)) [bits/character]."),
+            ("Four Resilience Rating Tiers", "Weak (< 2.0 bits) | Fair (2.0–3.0 bits) | Strong (3.0–3.8 bits) | Excellent (> 3.8 bits)."),
+            ("Structural Composition Metrics", "Quantifies exact dataset percentages for Has Digits, Has Symbols, Pure Lower, Capitalized, and Mixed Complex patterns."),
+            ("Targeted Tier Extraction", "Enables exporting specific resilience tiers directly to standalone .txt wordlists for targeted hash auditing.")
+        ]
+        c_stage4 = _guide_card("Security Evaluation: Shannon Entropy & Metrics", "#8B5CF6", s4_bullets)
+        grid.addWidget(c_stage4, 1, 1)
+
+        grid.setColumnStretch(0, 1)
+        grid.setColumnStretch(1, 1)
         vl.addLayout(grid)
+
+        # Operational Best Practices Card
+        tips_w = QWidget()
+        tv = QVBoxLayout(tips_w)
+        tv.setContentsMargins(18, 14, 18, 14)
+        tv.setSpacing(6)
+
+        t_h = QLabel("💡  Security Auditor's Operational Guidance")
+        t_h.setStyleSheet("font-weight: 700; color: #10B981; font-size: 13px;")
+
+        t_b1 = QLabel("• Compliance Auditing: Constrain length boundaries between 8 and 16 characters to benchmark against enterprise password policy baselines.")
+        t_b1.setWordWrap(True)
+        t_b1.setStyleSheet("font-size: 12px; line-height: 1.45;")
+
+        t_b2 = QLabel("• Social Engineering Resilience: Include family member and pet anchors to audit predictable behavioral password patterns.")
+        t_b2.setWordWrap(True)
+        t_b2.setStyleSheet("font-size: 12px; line-height: 1.45;")
+
+        t_b3 = QLabel("• Targeted Hash Verification: Use 'Export Selected Tier' to isolate Strong and Excellent candidates for high-probability offline dictionary testing.")
+        t_b3.setWordWrap(True)
+        t_b3.setStyleSheet("font-size: 12px; line-height: 1.45;")
+
+        tv.addWidget(t_h)
+        tv.addWidget(t_b1)
+        tv.addWidget(t_b2)
+        tv.addWidget(t_b3)
 
         tip_card = QFrame()
         tip_card.setObjectName("card2")
-        tv = QVBoxLayout(tip_card)
-        tv.setContentsMargins(16, 14, 16, 14)
-        tv.setSpacing(4)
-
-        t_h = QLabel("💡  Security Auditor's Cheat Sheet:")
-        t_h.setStyleSheet("font-weight: 700; color: #10B981; font-size: 12px;")
-        t_b = QLabel("1. Focus length boundaries between 8 and 16 characters for enterprise compliance audits.\n2. Add spouse and child names to test social engineering password patterns.\n3. Use 'Export Selected Tier' to extract only Strong & Excellent candidates for targeted hash verification.")
-        t_b.setWordWrap(True)
-        t_b.setStyleSheet("font-size: 11px; color: #94A3B8; line-height: 1.5;")
-
-        tv.addWidget(t_h)
-        tv.addWidget(t_b)
+        tip_card_lay = QVBoxLayout(tip_card)
+        tip_card_lay.setContentsMargins(0, 0, 0, 0)
+        tip_card_lay.addWidget(tips_w)
         vl.addWidget(tip_card)
+
+        # Subtle, understated author attribution footer
+        vl.addSpacing(6)
+        footer_lbl = QLabel("Engineered with care • Siddhesh")
+        footer_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        footer_lbl.setObjectName("muted")
+        footer_lbl.setStyleSheet("font-size: 11px; font-weight: 600; letter-spacing: 0.5px;")
+        vl.addWidget(footer_lbl)
+        vl.addSpacing(4)
 
         scroll.setWidget(page)
         return scroll
@@ -1641,13 +1752,24 @@ class CipherForgeWindow(QMainWindow):
         try:
             mn = int(self._in_min.text().strip() or DEFAULT_MIN_LEN)
             mx = int(self._in_max.text().strip() or DEFAULT_MAX_LEN)
+            if mn < 1:
+                self._log("[ERR] Min Length must be at least 1.")
+                return None
             if mn > mx:
                 self._log("[ERR] Min Length cannot exceed Max Length.")
+                return None
+            if mx > 128:
+                self._log("[ERR] Max Length cannot exceed 128 characters.")
                 return None
             data["min_len"] = mn
             data["max_len"] = mx
         except ValueError:
             self._log("[ERR] Min/Max length must be integers.")
+            return None
+
+        year_num = int(year)
+        if year_num < 1900 or year_num > 2100:
+            self._log("[ERR] Birth Year must be between 1900 and 2100.")
             return None
 
         fam_names = []
@@ -1682,11 +1804,16 @@ class CipherForgeWindow(QMainWindow):
         self._log(f"[FORECAST] Matrix: {len(bases)} structural roots -> ~{est:,} unique words estimate.")
 
     def _start_generation(self):
+        if self._worker and self._worker.isRunning():
+            return
         p = self._collect_profile()
         if not p:
             return
 
-        self._console.clear()
+        # Keep initial ready line or re-seed cleanly so generation logs appear underneath it
+        if self._console.toPlainText().strip() != "> Ready — CipherForge telemetry initialized.":
+            self._console.clear()
+            self._console.appendPlainText("> Ready — CipherForge telemetry initialized.")
         self._log(f"[START] Starting CipherForge synthesis pipeline for target: '{p['name']}'...")
 
         self._btn_gen.setEnabled(False)
@@ -1698,6 +1825,11 @@ class CipherForgeWindow(QMainWindow):
         self._side_status.setStyleSheet("color: #F59E0B; font-size: 11px; font-weight: 600;")
 
         out_name = p.get("output") or None
+        if out_name:
+            for ch in ['/', '\\', ':', '*', '?', '"', '<', '>', '|']:
+                out_name = out_name.replace(ch, '_')
+            if not out_name.endswith('.txt'):
+                out_name += '.txt'
         self._worker = GenerationWorker(p, p["leet_max"], p["min_len"], p["max_len"], out_name)
         self._worker.progress.connect(self._on_progress)
         self._worker.complete.connect(self._on_complete)
@@ -1720,6 +1852,14 @@ class CipherForgeWindow(QMainWindow):
         self._btn_est.setEnabled(True)
         self._btn_stop.setEnabled(False)
         self._worker = None
+
+        if res.get("aborted"):
+            self._pbar.setValue(0)
+            self._status_lbl.setText("Generation aborted by user.")
+            self._side_status.setText("● Aborted")
+            self._side_status.setStyleSheet("color: #EF4444; font-size: 11px; font-weight: 600;")
+            self._log("[ABORT] Pipeline stopped. No files written.")
+            return
 
         if res["count"] == 0:
             self._pbar.setValue(0)
@@ -1753,8 +1893,15 @@ class CipherForgeWindow(QMainWindow):
             self._render_stats(self._analysis)
 
     def _log(self, text: str):
-        ts = datetime.datetime.now().strftime("%H:%M:%S")
-        self._console.appendPlainText(f"[{ts}] {text}")
+        clean = text.strip()
+        if clean.startswith(">"):
+            # Indent progress detail lines with 11 spaces to match width of timestamp [HH:MM:SS]
+            self._console.appendPlainText(f"{' ' * 11}{clean}")
+        elif clean.startswith("Output saved:"):
+            self._console.appendPlainText(f"{' ' * 11}{clean}")
+        else:
+            ts = datetime.datetime.now().strftime("%H:%M:%S")
+            self._console.appendPlainText(f"[{ts}] {clean}")
 
     def _open_folder(self):
         target_dir = get_output_dir()
@@ -1769,6 +1916,8 @@ class CipherForgeWindow(QMainWindow):
             self._log(f"[ERR] Could not open folder: {e}")
 
     def _import_file(self):
+        if self._analysis_worker and self._analysis_worker.isRunning():
+            return
         path, _ = QFileDialog.getOpenFileName(self, "Select Wordlist File", "", "Text Files (*.txt);;All Files (*)")
         if not path:
             return
@@ -1979,16 +2128,28 @@ class CipherForgeWindow(QMainWindow):
         if hasattr(self, "_c_pat"):
             self._c_pat.apply_theme(t)
 
+        self._btn_light.setProperty("theme_active", "1" if not self._is_dark else "0")
         self._btn_dark.setProperty("theme_active", "1" if self._is_dark else "0")
-        self._btn_light.setProperty("theme_active", "0" if self._is_dark else "1")
-        for b in (self._btn_dark, self._btn_light):
+        for b in (self._btn_light, self._btn_dark):
             b.style().unpolish(b)
             b.style().polish(b)
 
 
 def launch_gui():
+    if sys.platform == "win32":
+        try:
+            ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(APP_ID)
+        except Exception:
+            pass
+
     app = QApplication.instance() or QApplication(sys.argv)
     app.setStyle("Fusion")
+
+    ico_path = os.path.join(ASSETS, "app_icon.ico")
+    if os.path.exists(ico_path):
+        app_icon = QIcon(ico_path)
+        app.setWindowIcon(app_icon)
+
     win = CipherForgeWindow()
     win.show()
     sys.exit(app.exec())

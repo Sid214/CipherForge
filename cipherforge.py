@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env python3
+#!/usr/bin/env python3
 """
 cipherforge.py
 ══════════════════════════════════════════════════════════════════
@@ -17,10 +17,13 @@ Usage:
 ══════════════════════════════════════════════════════════════════
 """
 from __future__ import annotations
+__version__ = "2.6.0"
+__author__ = "Siddhesh"
+AUTHOR = "Siddhesh"
+
 import sys
 import os
 import argparse
-import time
 
 # Ensure project root on path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -191,6 +194,12 @@ def main():
 
 
 def _launch_gui():
+    if sys.platform == "win32":
+        try:
+            import ctypes
+            ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("cipherforge.wordlist.studio.v2")
+        except Exception:
+            pass
     try:
         from cipherforge.gui import launch_gui
         launch_gui()

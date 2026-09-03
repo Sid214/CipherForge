@@ -1,4 +1,4 @@
-﻿"""
+"""
 cipherforge/core/generator.py
 Core wordlist generation engine with dynamic profile, family members, custom phrases, and dedicated output directories.
 """
@@ -146,9 +146,11 @@ def _leet_variants(word: str, max_variants: int = DEFAULT_LEET_MAX) -> set[str]:
         res.add(''.join(combo))
     return res
 
-def expand_variants(roots: set[str], leet_max: int = DEFAULT_LEET_MAX) -> set[str]:
+def expand_variants(roots: set[str], leet_max: int = DEFAULT_LEET_MAX, stop_event=None) -> set[str]:
     expanded: set[str] = set()
-    for root in roots:
+    for i, root in enumerate(roots):
+        if stop_event and i % 20 == 0 and stop_event.is_set():
+            break
         expanded.update(_case_variants(root))
         expanded.update(_leet_variants(root, leet_max))
     return expanded
@@ -158,6 +160,7 @@ def apply_affixes(
     min_len: int = DEFAULT_MIN_LEN,
     max_len: int = DEFAULT_MAX_LEN,
     extra_suffixes: list[str] | None = None,
+    stop_event=None,
 ) -> set[str]:
     suffixes = list(SUFFIXES)
     if extra_suffixes:
@@ -167,7 +170,9 @@ def apply_affixes(
 
     pref_suff = list(itertools.product(PREFIXES, suffixes))
     wordlist: set[str] = set()
-    for root in roots:
+    for i, root in enumerate(roots):
+        if stop_event and i % 100 == 0 and stop_event.is_set():
+            break
         for p, s in pref_suff:
             candidate = p + root + s
             if min_len <= len(candidate) <= max_len:
@@ -224,7 +229,7 @@ def run_pipeline(
         return _partial_result(set(), start, output_path, bases, 0, True)
 
     emit('stage2', 'Expanding case & leet permutations...', 0.20)
-    expanded = expand_variants(bases, leet_max)
+    expanded = expand_variants(bases, leet_max, stop_event=stop_event)
     emit('stage2', f'Expanded: {len(expanded):,} variant roots', 0.40)
 
     if stop_event and stop_event.is_set():
@@ -239,11 +244,11 @@ def run_pipeline(
     if len(year) == 4 and year[2:] not in SUFFIXES:
         extra_sfx.append(year[2:])
 
-    wordlist = apply_affixes(expanded, min_len, max_len, extra_sfx)
+    wordlist = apply_affixes(expanded, min_len, max_len, extra_sfx, stop_event=stop_event)
     emit('stage3', f'Filtered wordlist: {len(wordlist):,} unique words', 0.85)
 
     if stop_event and stop_event.is_set():
-        aborted = True
+        return _partial_result(set(), start, output_path, bases, len(expanded), True)
 
     if wordlist:
         emit('saving', 'Writing wordlist to disk...', 0.90)
