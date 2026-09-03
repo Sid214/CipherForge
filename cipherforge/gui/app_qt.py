@@ -1,4 +1,4 @@
-﻿"""
+"""
 cipherforge/gui/app_qt.py
 CipherForge Studio — Modern, Responsive, GPU-Accelerated PyQt6 Desktop Suite.
 Engineered for zero-lag responsiveness, seamless Light/Dark mode, and advanced wordlist synthesis.
@@ -17,11 +17,11 @@ from PyQt6.QtWidgets import (
     QGridLayout, QLabel, QPushButton, QLineEdit, QSlider, QProgressBar,
     QScrollArea, QPlainTextEdit, QStackedWidget, QFileDialog,
     QTableWidget, QTableWidgetItem, QHeaderView, QAbstractItemView,
-    QComboBox, QSizePolicy
+    QComboBox, QListView, QSizePolicy
 )
-from PyQt6.QtCore import Qt, QThread, pyqtSignal, QRect
+from PyQt6.QtCore import Qt, QThread, pyqtSignal, QRect, QSize, QTimer
 from PyQt6.QtGui import (
-    QColor, QPainter, QLinearGradient, QFont, QPixmap, QBrush, QPen, QCursor
+    QColor, QPainter, QLinearGradient, QFont, QPixmap, QBrush, QPen, QCursor, QPalette
 )
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
@@ -34,6 +34,7 @@ from cipherforge.core.analyzer import (
 from cipherforge.core.rules import DEFAULT_MIN_LEN, DEFAULT_MAX_LEN
 
 ASSETS = os.path.join(os.path.dirname(__file__), "..", "assets")
+CHEVRON_PATH = os.path.join(ASSETS, "chevron_down.png").replace("\\", "/")
 
 DARK = dict(
     app_bg="#0B0F19",
@@ -112,7 +113,7 @@ RELATIONS = ["Spouse", "Child", "Sibling", "Parent", "Close Friend", "Other"]
 
 def _qss(t: dict) -> str:
     return f"""
-QMainWindow, QWidget#main_bg {{
+QMainWindow, QWidget {{
     background-color: {t['app_bg']};
     color: {t['text']};
     font-family: "Segoe UI", Arial, sans-serif;
@@ -121,11 +122,7 @@ QFrame#sidebar {{
     background-color: {t['sidebar_bg']};
     border-right: 1px solid {t['border']};
 }}
-QFrame#sidebar QWidget {{
-    background-color: transparent;
-    background: transparent;
-}}
-QFrame#sidebar QLabel {{
+QFrame#sidebar QWidget, QFrame#sidebar QLabel {{
     background-color: transparent;
     background: transparent;
 }}
@@ -139,6 +136,15 @@ QFrame#card2 {{
     background-color: {t['card_bg2']};
     border: 1px solid {t['border']};
     border-radius: 8px;
+}}
+
+QScrollArea {{
+    background-color: {t['app_bg']};
+    background: transparent;
+    border: none;
+}}
+QScrollArea > QWidget > QWidget {{
+    background-color: {t['app_bg']};
 }}
 
 QLabel {{
@@ -171,7 +177,7 @@ QLabel#kpi_purple {{ font-size: 17px; font-weight: 700; color: {t['purple']}; }}
 
 QLineEdit {{
     background-color: {t['input_bg']};
-    border: 1px solid {t['border2']};
+    border: 1.5px solid {t['border2']};
     border-radius: 7px;
     color: {t['text']};
     font-size: 12px;
@@ -183,6 +189,7 @@ QLineEdit:focus {{
     background-color: {t['card_bg']};
 }}
 
+/* Clean Single-Layer QComboBox with Smooth Translucent Antialiasing */
 QComboBox {{
     background-color: {t['input_bg']};
     border: 1.5px solid {t['border2']};
@@ -190,52 +197,60 @@ QComboBox {{
     color: {t['text']};
     font-size: 12px;
     font-weight: 600;
-    padding: 6px 12px;
-    min-height: 20px;
+    padding: 5px 28px 5px 12px;
+    max-height: 34px;
 }}
 QComboBox:hover {{
     border-color: {t['accent']};
 }}
 QComboBox:focus {{
     border-color: {t['accent']};
-    background-color: {t['card_bg']};
 }}
 QComboBox::drop-down {{
     subcontrol-origin: padding;
     subcontrol-position: top right;
-    width: 26px;
-    border-left: 1px solid {t['border']};
+    width: 24px;
+    border: none;
     border-top-right-radius: 7px;
     border-bottom-right-radius: 7px;
-    background-color: {t['card_bg2']};
+    background: transparent;
 }}
 QComboBox::down-arrow {{
-    image: none;
-    border-left: 4px solid transparent;
-    border-right: 4px solid transparent;
-    border-top: 5px solid {t['text_sub']};
-    margin-right: 2px;
+    image: url("{CHEVRON_PATH}");
+    width: 12px;
+    height: 12px;
+    margin-right: 6px;
 }}
-QComboBox QAbstractItemView {{
+
+/* Single clean popup menu with one consistent background and one border, rounded on all 4 corners */
+QComboBox QFrame {{
+    border: none;
+    background: transparent;
+    padding: 0px;
+    margin: 0px;
+}}
+QComboBox QAbstractItemView, QComboBox QListView {{
     background-color: {t['card_bg']};
     color: {t['text']};
-    border: 1px solid {t['border2']};
+    border: 1.5px solid {t['border2']};
     border-radius: 8px;
     padding: 4px;
     outline: 0px;
     selection-background-color: {t['accent']};
     selection-color: #FFFFFF;
 }}
-QComboBox QAbstractItemView::item {{
+QComboBox QAbstractItemView::item, QComboBox QListView::item {{
     padding: 6px 10px;
     border-radius: 4px;
     min-height: 22px;
+    color: {t['text']};
+    background-color: transparent;
 }}
-QComboBox QAbstractItemView::item:hover {{
+QComboBox QAbstractItemView::item:hover, QComboBox QListView::item:hover {{
     background-color: {t['nav_hover']};
     color: {t['text']};
 }}
-QComboBox QAbstractItemView::item:selected {{
+QComboBox QAbstractItemView::item:selected, QComboBox QListView::item:selected {{
     background-color: {t['accent']};
     color: #FFFFFF;
 }}
@@ -269,7 +284,9 @@ QProgressBar::chunk {{
     border-radius: 4px;
 }}
 
+/* Button Primary: Always solid electric blue */
 QPushButton#btn_primary {{
+    background-color: {t['accent']};
     background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 {t['accent']}, stop:1 {t['accent_dark']});
     color: #FFFFFF;
     border: none;
@@ -277,16 +294,23 @@ QPushButton#btn_primary {{
     font-size: 13px;
     font-weight: 700;
     padding: 10px 22px;
-    min-height: 20px;
+    min-height: 22px;
 }}
 QPushButton#btn_primary:hover {{
+    background-color: {t['accent_glow']};
     background: {t['accent_glow']};
 }}
+QPushButton#btn_primary:pressed {{
+    background-color: {t['accent_dark']};
+    background: {t['accent_dark']};
+}}
 QPushButton#btn_primary:disabled {{
+    background-color: {t['border']};
     background: {t['border']};
     color: {t['text_muted']};
 }}
 
+/* Button Secondary: Precisely 34px height when fixed, matching adjacent inputs */
 QPushButton#btn_secondary {{
     background-color: {t['card_bg2']};
     color: {t['accent']};
@@ -294,7 +318,7 @@ QPushButton#btn_secondary {{
     border-radius: 8px;
     font-size: 12px;
     font-weight: 600;
-    padding: 8px 18px;
+    padding: 6px 18px;
     min-height: 18px;
 }}
 QPushButton#btn_secondary:hover {{
@@ -339,6 +363,24 @@ QPushButton#btn_ghost:hover {{
     background-color: {t['nav_hover']};
     color: {t['text']};
     border-color: {t['accent']};
+}}
+
+/* Sleek Terminal Clear Button */
+QPushButton#terminal_btn {{
+    background-color: transparent;
+    color: {t['console_text']};
+    border: 1px solid {t['border2']};
+    border-radius: 5px;
+    font-family: "Cascadia Code", "Consolas", monospace;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 4px 12px;
+    min-height: 18px;
+}}
+QPushButton#terminal_btn:hover {{
+    background-color: {t['card_bg2']};
+    border-color: {t['accent']};
+    color: {t['text']};
 }}
 
 QPushButton#nav_btn {{
@@ -410,10 +452,34 @@ QPlainTextEdit#console {{
     padding: 8px;
 }}
 
-QScrollArea {{
+/* Terminal Scrollbar: Completely transparent track blending into terminal */
+QPlainTextEdit#console QScrollBar:vertical {{
     background: transparent;
+    background-color: transparent;
+    width: 6px;
     border: none;
+    margin: 0px;
 }}
+QPlainTextEdit#console QScrollBar::handle:vertical {{
+    background: {t['border2']};
+    border-radius: 3px;
+    min-height: 24px;
+}}
+QPlainTextEdit#console QScrollBar::handle:vertical:hover {{
+    background: {t['accent']};
+}}
+QPlainTextEdit#console QScrollBar::add-line:vertical, 
+QPlainTextEdit#console QScrollBar::sub-line:vertical,
+QPlainTextEdit#console QScrollBar::add-page:vertical, 
+QPlainTextEdit#console QScrollBar::sub-page:vertical {{
+    background: transparent;
+    background-color: transparent;
+    border: none;
+    height: 0px;
+    width: 0px;
+}}
+
+/* Global Scrollbar */
 QScrollBar:vertical {{
     background: {t['app_bg']};
     width: 6px;
@@ -512,7 +578,6 @@ class BarChart(QWidget):
 
             fw = int(barea * (val / mv))
             if fw > 3:
-                # Float coordinates prevent TypeError: argument 1 has unexpected type 'QPoint'
                 g = QLinearGradient(float(lw), float(y), float(lw + fw), float(y))
                 g.setColorAt(0, self._bar)
                 g.setColorAt(1, self._bar.lighter(135))
@@ -650,7 +715,7 @@ def _sep():
     f.setStyleSheet("color: rgba(100, 130, 180, 0.15);")
     return f
 
-def _field(label: str, widget: QWidget, hint: str = "") -> QWidget:
+def _field(label: str, widget: QWidget) -> QWidget:
     w = QWidget()
     v = QVBoxLayout(w)
     v.setContentsMargins(0, 0, 0, 0)
@@ -662,10 +727,6 @@ def _field(label: str, widget: QWidget, hint: str = "") -> QWidget:
     lbl.setFont(fnt)
     v.addWidget(lbl)
     v.addWidget(widget)
-    if hint:
-        h = QLabel(hint)
-        h.setStyleSheet("font-size: 10px; color: #64748B;")
-        v.addWidget(h)
     return w
 
 def _card(title: str, body: QWidget, stripe: str = "#2563EB") -> QFrame:
@@ -913,7 +974,7 @@ class CipherForgeWindow(QMainWindow):
         btn_demo.clicked.connect(self._fill_demo)
         hrow.addWidget(btn_demo)
 
-        btn_clear = QPushButton("🗑️ Clear Details")
+        btn_clear = QPushButton("Clear Details")
         btn_clear.setObjectName("btn_ghost")
         btn_clear.setFixedHeight(32)
         btn_clear.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -957,8 +1018,8 @@ class CipherForgeWindow(QMainWindow):
         pg.addWidget(_field("Favorite Sport", self._inputs["sport"]), 3, 0)
 
         self._inputs["custom_phrases"] = QLineEdit()
-        self._inputs["custom_phrases"].setPlaceholderText("E.g. Welcome@123")
-        pg.addWidget(_field("Custom Passphrases / Keywords", self._inputs["custom_phrases"], "Known words or phrases (comma-separated)"), 3, 1)
+        self._inputs["custom_phrases"].setPlaceholderText("E.g. Welcome@123 (comma-separated)")
+        pg.addWidget(_field("Custom Passphrases / Keywords", self._inputs["custom_phrases"]), 3, 1)
 
         pg.setColumnStretch(0, 1)
         pg.setColumnStretch(1, 1)
@@ -981,9 +1042,28 @@ class CipherForgeWindow(QMainWindow):
 
         f_in_row = QHBoxLayout()
         f_in_row.setSpacing(8)
+        f_in_row.setAlignment(Qt.AlignmentFlag.AlignVCenter)
 
+        # Single-layer clean relationship dropdown with zero duplicate outer frame
         self._combo_relation = QComboBox()
+        self._combo_relation.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, True)
+        combo_view = QListView()
+        self._combo_relation.setView(combo_view)
+        
+        # Remove extra duplicate outer frame from the popup container
+        popup_container = self._combo_relation.view().parentWidget()
+        if popup_container:
+            popup_container.setStyleSheet("background: transparent; border: none; padding: 0px; margin: 0px;")
+            popup_container.setFrameShape(QFrame.Shape.NoFrame)
+            popup_container.setLineWidth(0)
+            popup_container.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, True)
+            popup_container.setWindowFlags(Qt.WindowType.Popup | Qt.WindowType.FramelessWindowHint | Qt.WindowType.NoDropShadowWindowHint)
+            if popup_container.layout():
+                popup_container.layout().setContentsMargins(0, 0, 0, 0)
+                popup_container.layout().setSpacing(0)
+
         self._combo_relation.addItems(RELATIONS)
+        self._combo_relation.setMaxVisibleItems(len(RELATIONS))
         self._combo_relation.setFixedWidth(135)
         self._combo_relation.setFixedHeight(34)
 
@@ -991,6 +1071,7 @@ class CipherForgeWindow(QMainWindow):
         self._in_fam_name.setPlaceholderText("E.g. Priya")
         self._in_fam_name.setFixedHeight(34)
 
+        # + Add Member button aligned exactly to 34px height
         btn_add_fam = QPushButton("＋ Add Member")
         btn_add_fam.setObjectName("btn_secondary")
         btn_add_fam.setFixedHeight(34)
@@ -1009,10 +1090,11 @@ class CipherForgeWindow(QMainWindow):
         self._fam_badge_layout.addStretch()
         fam_v.addWidget(self._fam_badge_box)
 
+        # Output Filename in Card 2
         self._inputs["output"] = QLineEdit()
         self._inputs["output"].setPlaceholderText("E.g. aarav_wordlist.txt")
-        self._inputs["output"].setFixedHeight(36)
-        fam_v.addWidget(_field("💾 Output Wordlist Filename", self._inputs["output"], "Saved automatically inside 'generated_wordlists/' directory"))
+        self._inputs["output"].setFixedHeight(34)
+        fam_v.addWidget(_field("💾 Output Wordlist Filename (saved in generated_wordlists/)", self._inputs["output"]))
 
         vl.addWidget(_card("👥  Family Members & Output File Configuration", fam_card_body, "#8B5CF6"))
 
@@ -1050,6 +1132,7 @@ class CipherForgeWindow(QMainWindow):
         og.setColumnStretch(2, 2)
         vl.addWidget(_card("⚙️  Synthesis Boundaries", opts_body, "#10B981"))
 
+        # Card 4: Execution Control
         af = QWidget()
         av = QVBoxLayout(af)
         av.setContentsMargins(14, 8, 14, 10)
@@ -1094,27 +1177,54 @@ class CipherForgeWindow(QMainWindow):
         self._status_lbl.setObjectName("muted")
         srow.addWidget(self._status_lbl)
         srow.addStretch()
-
-        clr = QPushButton("Clear Log")
-        clr.setObjectName("btn_ghost")
-        clr.setFixedHeight(28)
-        clr.setMinimumWidth(88)
-        clr.setCursor(Qt.CursorShape.PointingHandCursor)
-        clr.clicked.connect(lambda: self._console.clear())
-        srow.addWidget(clr)
         av.addLayout(srow)
 
         vl.addWidget(_card("🚀  Execution Control", af, "#F59E0B"))
 
+        # Card 5: Telemetry Logs with 🔴 🟡 🟢 dots, prompt, and Clear Logs button
         lf = QWidget()
         lv2 = QVBoxLayout(lf)
-        lv2.setContentsMargins(14, 6, 14, 10)
+        lv2.setContentsMargins(14, 8, 14, 12)
         lv2.setSpacing(8)
+
+        term_hdr = QWidget()
+        term_hl = QHBoxLayout(term_hdr)
+        term_hl.setContentsMargins(0, 0, 0, 0)
+        term_hl.setSpacing(8)
+
+        dots_w = QWidget()
+        dl = QHBoxLayout(dots_w)
+        dl.setContentsMargins(0, 0, 0, 0)
+        dl.setSpacing(6)
+        for dot_c in ["#EF4444", "#F59E0B", "#10B981"]:
+            dot = QFrame()
+            dot.setFixedSize(10, 10)
+            dot.setStyleSheet(f"background-color: {dot_c}; border-radius: 5px;")
+            dl.addWidget(dot)
+        term_hl.addWidget(dots_w)
+
+        term_prompt = QLabel("cipherforge@engine:~$")
+        term_prompt.setStyleSheet("font-family: 'Cascadia Code', Consolas, monospace; font-size: 11px; font-weight: 700; color: #38BDF8;")
+        term_hl.addWidget(term_prompt)
+
+        term_hl.addStretch()
+
+        btn_clear_log = QPushButton("Clear Logs")
+        btn_clear_log.setObjectName("terminal_btn")
+        btn_clear_log.setCursor(Qt.CursorShape.PointingHandCursor)
+        btn_clear_log.clicked.connect(self._clear_console)
+        term_hl.addWidget(btn_clear_log)
+
+        lv2.addWidget(term_hdr)
 
         self._console = QPlainTextEdit()
         self._console.setObjectName("console")
         self._console.setReadOnly(True)
         self._console.setFixedHeight(160)
+
+        # Style vertical scrollbar with transparent trough blending into terminal
+        vsb = self._console.verticalScrollBar()
+        vsb.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, True)
         lv2.addWidget(self._console)
 
         krow = QHBoxLayout()
@@ -1127,10 +1237,15 @@ class CipherForgeWindow(QMainWindow):
             krow.addWidget(k)
         lv2.addLayout(krow)
 
-        vl.addWidget(_card("📋  Telemetry Log", lf, "#8B5CF6"))
+        vl.addWidget(_card("📋  Telemetry Logs", lf, "#8B5CF6"))
 
         scroll.setWidget(page)
         return scroll
+
+    def _clear_console(self):
+        self._console.clear()
+        ts = datetime.datetime.now().strftime("%H:%M:%S")
+        self._console.appendPlainText(f"[{ts}] [SYS] Terminal initialized. Engine standby.")
 
     def _add_family_member(self):
         rel = self._combo_relation.currentText()
@@ -1254,6 +1369,39 @@ class CipherForgeWindow(QMainWindow):
         hl = QLabel("🔐  Entropy Inspector & Security Analysis")
         hl.setObjectName("h1")
         vl.addWidget(hl)
+
+        # In-Page Modern Toast Confirmation Banner with perfectly aligned buttons
+        self._toast_banner = QFrame()
+        self._toast_banner.setObjectName("card2")
+        self._toast_banner.setVisible(False)
+        tb_l = QHBoxLayout(self._toast_banner)
+        tb_l.setContentsMargins(16, 8, 16, 8)
+        tb_l.setSpacing(12)
+        tb_l.setAlignment(Qt.AlignmentFlag.AlignVCenter)
+
+        self._toast_lbl = QLabel()
+        self._toast_lbl.setStyleSheet("font-size: 12px; font-weight: 600; color: #10B981;")
+        self._toast_lbl.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
+        tb_l.addWidget(self._toast_lbl, 1)
+
+        btn_toast_open = QPushButton("Open Directory")
+        btn_toast_open.setObjectName("btn_ghost")
+        btn_toast_open.setFixedHeight(30)
+        btn_toast_open.setMinimumWidth(125)
+        btn_toast_open.setStyleSheet("padding: 5px 16px; font-size: 11px; font-weight: 600; text-align: center;")
+        btn_toast_open.setCursor(Qt.CursorShape.PointingHandCursor)
+        btn_toast_open.clicked.connect(self._open_folder)
+        tb_l.addWidget(btn_toast_open)
+
+        btn_toast_close = QPushButton("✕")
+        btn_toast_close.setFixedSize(28, 28)
+        btn_toast_close.setObjectName("btn_ghost")
+        btn_toast_close.setStyleSheet("border-radius: 6px; color: #94A3B8; font-weight: bold; font-size: 12px; text-align: center; padding: 0px;")
+        btn_toast_close.setCursor(Qt.CursorShape.PointingHandCursor)
+        btn_toast_close.clicked.connect(lambda: self._toast_banner.setVisible(False))
+        tb_l.addWidget(btn_toast_close)
+
+        vl.addWidget(self._toast_banner)
 
         tf = QWidget()
         tl = QHBoxLayout(tf)
@@ -1454,7 +1602,7 @@ class CipherForgeWindow(QMainWindow):
         self._family_entries.append(f"{rel_choice}: {fam_name}")
         self._refresh_family_badges()
 
-        self._log(f"✨  Loaded random demo profile: {first} {last} (DOB: {year}, {city})")
+        self._log(f"[DEMO] Loaded profile: {first} {last} (DOB: {year}, {city})")
 
     def _clear_details(self):
         for e in self._inputs.values():
@@ -1473,28 +1621,28 @@ class CipherForgeWindow(QMainWindow):
         self._side_status.setText("● Engine Ready")
         self._side_status.setStyleSheet("color: #10B981; font-size: 11px; font-weight: 600;")
         self._side_words.setText("0 words generated")
-        self._log("🗑️  Cleared all profile fields and configuration details.")
+        self._log("[RESET] Cleared all profile fields and configuration parameters.")
 
     def _collect_profile(self) -> dict | None:
         data = {k: e.text().strip() for k, e in self._inputs.items()}
         if not data.get("name"):
-            self._log("✖ Error: First Name is required.")
+            self._log("[ERR] First Name is required.")
             return None
         year = data.get("year", "")
         if not year or not year.isdigit() or len(year) != 4:
-            self._log("✖ Error: Birth Year must be exactly 4 digits (E.g. 1995).")
+            self._log("[ERR] Birth Year must be exactly 4 digits (e.g. 1995).")
             return None
 
         try:
             mn = int(self._in_min.text().strip() or DEFAULT_MIN_LEN)
             mx = int(self._in_max.text().strip() or DEFAULT_MAX_LEN)
             if mn > mx:
-                self._log("✖ Error: Min Length cannot exceed Max Length.")
+                self._log("[ERR] Min Length cannot exceed Max Length.")
                 return None
             data["min_len"] = mn
             data["max_len"] = mx
         except ValueError:
-            self._log("✖ Error: Min/Max length must be integers.")
+            self._log("[ERR] Min/Max length must be integers.")
             return None
 
         fam_names = []
@@ -1526,7 +1674,7 @@ class CipherForgeWindow(QMainWindow):
         self._kf.set_val("Forecast")
         self._status_lbl.setText(f"Estimated Candidates: ~{est:,} words (within {p['min_len']}–{p['max_len']} chars)")
         self._side_words.setText(f"~{est:,} est. words")
-        self._log(f"🔢  Forecast: {len(bases)} structural roots → ~{est:,} unique words estimate.")
+        self._log(f"[FORECAST] Matrix: {len(bases)} structural roots -> ~{est:,} unique words estimate.")
 
     def _start_generation(self):
         p = self._collect_profile()
@@ -1534,7 +1682,7 @@ class CipherForgeWindow(QMainWindow):
             return
 
         self._console.clear()
-        self._log(f"⚡  Starting CipherForge synthesis for target: '{p['name']}'...")
+        self._log(f"[START] Starting CipherForge synthesis pipeline for target: '{p['name']}'...")
 
         self._btn_gen.setEnabled(False)
         self._btn_est.setEnabled(False)
@@ -1554,13 +1702,13 @@ class CipherForgeWindow(QMainWindow):
         if self._worker:
             self._worker.stop()
         self._status_lbl.setText("Aborting...")
-        self._log("⛔  Stop signal dispatched to worker thread.")
+        self._log("[ABORT] Stop signal dispatched to worker thread.")
 
     def _on_progress(self, p: dict):
         pct = float(p.get("pct", 0))
         self._pbar.setValue(int(pct * 100))
         self._status_lbl.setText(p.get("detail", ""))
-        self._log(f"  ↳  {p.get('detail', '')}")
+        self._log(f"  > {p.get('detail', '')}")
 
     def _on_complete(self, res: dict):
         self._btn_gen.setEnabled(True)
@@ -1573,7 +1721,7 @@ class CipherForgeWindow(QMainWindow):
             self._status_lbl.setText("No words matched the length filters.")
             self._side_status.setText("● Engine Ready")
             self._side_status.setStyleSheet("color: #10B981; font-size: 11px; font-weight: 600;")
-            self._log("⚠  Zero words matched. Try widening Min/Max.")
+            self._log("[WARN] Zero words matched the length boundaries.")
             return
 
         self._pbar.setValue(100)
@@ -1590,9 +1738,9 @@ class CipherForgeWindow(QMainWindow):
         self._side_words.setText(f"{count_str} words ready")
         self._status_lbl.setText(f"Done — Generated {count_str} words in {res['elapsed']:.2f}s")
 
-        self._log(f"✅  Generated {count_str} words in {res['elapsed']:.2f}s at {res['rate']:,} words/sec")
+        self._log(f"[SUCCESS] Generated {count_str} words in {res['elapsed']:.2f}s ({res['rate']:,} words/sec)")
         if self._last_file:
-            self._log(f"    Saved in: {self._last_file}")
+            self._log(f"  Output saved: {self._last_file}")
 
         wordlist = res.get("wordlist", set())
         if wordlist:
@@ -1601,7 +1749,7 @@ class CipherForgeWindow(QMainWindow):
 
     def _log(self, text: str):
         ts = datetime.datetime.now().strftime("%H:%M:%S")
-        self._console.appendPlainText(f"[{ts}]  {text}")
+        self._console.appendPlainText(f"[{ts}] {text}")
 
     def _open_folder(self):
         target_dir = get_output_dir()
@@ -1611,28 +1759,28 @@ class CipherForgeWindow(QMainWindow):
             else:
                 import subprocess
                 subprocess.Popen(["xdg-open" if sys.platform != "darwin" else "open", target_dir])
-            self._log(f"📂  Opened output directory: {target_dir}")
+            self._log(f"[SYS] Opened output directory: {target_dir}")
         except Exception as e:
-            self._log(f"✖  Could not open folder: {e}")
+            self._log(f"[ERR] Could not open folder: {e}")
 
     def _import_file(self):
         path, _ = QFileDialog.getOpenFileName(self, "Select Wordlist File", "", "Text Files (*.txt);;All Files (*)")
         if not path:
             return
 
-        self._log(f"⏳  Loading and analyzing: {os.path.basename(path)} in background thread...")
+        self._log(f"[IMPORT] Loading and analyzing: {os.path.basename(path)}...")
         self._analysis_worker = FileAnalysisWorker(path)
         self._analysis_worker.finished.connect(self._on_import_finished)
         self._analysis_worker.start()
 
     def _on_import_finished(self, analysis, filepath: str, error: str):
         if error:
-            self._log(f"✖  Failed to analyze file: {error}")
+            self._log(f"[ERR] Failed to analyze file: {error}")
             return
 
         self._analysis = analysis
         self._render_stats(analysis)
-        self._log(f"📊  Successfully analyzed {analysis.total_words:,} words from: {os.path.basename(filepath)}")
+        self._log(f"[ANALYSIS] Successfully processed {analysis.total_words:,} words from: {os.path.basename(filepath)}")
 
     def _render_stats(self, a):
         self._sk_total.set_val(f"{a.total_words:,}")
@@ -1650,12 +1798,13 @@ class CipherForgeWindow(QMainWindow):
         self._fill_table(a.entropy_scores, "All")
 
     def _fill_table(self, scored: list, tier: str = "All"):
+        self._table.setUpdatesEnabled(False)
         self._table.setRowCount(0)
         rows = scored
         if tier != "All":
             rows = [(w, e) for w, e in rows if strength_tier(e) == tier]
 
-        limit = min(len(rows), 250)
+        limit = min(len(rows), 10000)
         self._table.setRowCount(limit)
         for i, (word, score) in enumerate(rows[:limit]):
             tr = strength_tier(score)
@@ -1666,6 +1815,7 @@ class CipherForgeWindow(QMainWindow):
                 if c == 3:
                     item.setForeground(QColor(col))
                 self._table.setItem(i, c, item)
+        self._table.setUpdatesEnabled(True)
 
     def _live_test(self, text: str):
         if not text:
@@ -1688,14 +1838,25 @@ class CipherForgeWindow(QMainWindow):
 
     def _export(self):
         if not self._analysis:
-            self._log("✖ No wordlist available to export.")
+            self._log("[WARN] No wordlist available to export.")
+            self._toast_lbl.setText("Warning: No wordlist available to export. Generate or load a wordlist first.")
+            self._toast_lbl.setStyleSheet("font-size: 12px; font-weight: 600; color: #F59E0B;")
+            self._toast_banner.setStyleSheet("QFrame#card2 { background-color: rgba(245, 158, 11, 0.12); border: 1.5px solid #F59E0B; border-radius: 8px; }")
+            self._toast_banner.setVisible(True)
+            QTimer.singleShot(6000, lambda: self._toast_banner.setVisible(False))
             return
+
         tier = self._active_tier
         rows = self._analysis.entropy_scores
         if tier != "All":
             rows = [(w, e) for w, e in rows if strength_tier(e) == tier]
         if not rows:
-            self._log(f"✖ No words match tier '{tier}'.")
+            self._log(f"[WARN] No words match tier '{tier}'.")
+            self._toast_lbl.setText(f"Warning: No words match the '{tier}' tier.")
+            self._toast_lbl.setStyleSheet("font-size: 12px; font-weight: 600; color: #F59E0B;")
+            self._toast_banner.setStyleSheet("QFrame#card2 { background-color: rgba(245, 158, 11, 0.12); border: 1.5px solid #F59E0B; border-radius: 8px; }")
+            self._toast_banner.setVisible(True)
+            QTimer.singleShot(6000, lambda: self._toast_banner.setVisible(False))
             return
 
         ts = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -1705,14 +1866,67 @@ class CipherForgeWindow(QMainWindow):
             with open(name, "w", encoding="utf-8") as f:
                 for w, _ in rows:
                     f.write(w + "\n")
-            self._log(f"💾  Exported {len(rows):,} words → {os.path.abspath(name)}")
+            self._log(f"[EXPORT] Successfully exported {len(rows):,} words to: {os.path.abspath(name)}")
+            self._toast_lbl.setText(f"✓ Export Complete: {len(rows):,} '{tier}' words saved to {os.path.basename(name)}")
+            self._toast_lbl.setStyleSheet("font-size: 12px; font-weight: 600; color: #10B981;")
+            self._toast_banner.setStyleSheet("QFrame#card2 { background-color: rgba(16, 185, 129, 0.12); border: 1.5px solid #10B981; border-radius: 8px; }")
+            self._toast_banner.setVisible(True)
+            QTimer.singleShot(7000, lambda: self._toast_banner.setVisible(False))
         except Exception as e:
-            self._log(f"✖  Export failed: {e}")
+            self._log(f"[ERR] Export failed: {e}")
+            self._toast_lbl.setText(f"Error: Export failed - {e}")
+            self._toast_lbl.setStyleSheet("font-size: 12px; font-weight: 600; color: #EF4444;")
+            self._toast_banner.setStyleSheet("QFrame#card2 { background-color: rgba(239, 68, 68, 0.12); border: 1.5px solid #EF4444; border-radius: 8px; }")
+            self._toast_banner.setVisible(True)
+            QTimer.singleShot(6000, lambda: self._toast_banner.setVisible(False))
 
     def _do_theme(self, t: dict):
         self._theme = t
         self._is_dark = (t is DARK)
+
+        pal = QApplication.palette()
+        pal.setColor(QPalette.ColorRole.Window, QColor(t["app_bg"]))
+        pal.setColor(QPalette.ColorRole.WindowText, QColor(t["text"]))
+        pal.setColor(QPalette.ColorRole.Base, QColor(t["input_bg"]))
+        pal.setColor(QPalette.ColorRole.Text, QColor(t["text"]))
+        pal.setColor(QPalette.ColorRole.Button, QColor(t["card_bg2"]))
+        pal.setColor(QPalette.ColorRole.ButtonText, QColor(t["text"]))
+        pal.setColor(QPalette.ColorRole.Highlight, QColor(t["accent"]))
+        pal.setColor(QPalette.ColorRole.HighlightedText, QColor("#FFFFFF"))
+        QApplication.setPalette(pal)
+
         QApplication.instance().setStyleSheet(_qss(t))
+
+        # Explicitly enforce transparent scrollbar trough on terminal
+        if hasattr(self, "_console"):
+            vsb = self._console.verticalScrollBar()
+            vsb.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, True)
+            vsb.setStyleSheet(f"""
+                QScrollBar:vertical {{
+                    background: transparent;
+                    background-color: transparent;
+                    width: 6px;
+                    margin: 0px;
+                    border: none;
+                }}
+                QScrollBar::handle:vertical {{
+                    background: {t['border2']};
+                    border-radius: 3px;
+                    min-height: 24px;
+                }}
+                QScrollBar::handle:vertical:hover {{
+                    background: {t['accent']};
+                }}
+                QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical,
+                QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {{
+                    background: transparent;
+                    background-color: transparent;
+                    border: none;
+                    height: 0px;
+                    width: 0px;
+                }}
+            """)
+
         for c in getattr(self, "_all_charts", []):
             if hasattr(c, "apply_theme"):
                 c.apply_theme(t)

@@ -1,8 +1,8 @@
 ﻿"""
 cipherforge/core/analyzer.py
-Optimized post-generation and external wordlist analysis:
-Fast Shannon entropy scoring, length distribution, character frequency, and pattern breakdown.
-Prevents GUI freezing on large datasets.
+Comprehensive, High-Accuracy Wordlist & Credential Analytics Engine.
+Accurately scores Shannon entropy, exact length distributions, character frequency,
+and realistic structural pattern compositions without freezing the GUI.
 """
 
 from __future__ import annotations
@@ -42,7 +42,7 @@ def strength_tier(entropy: float) -> str:
     else:
         return 'Excellent'
 
-def analyze_wordlist(wordlist: set[str] | list[str], max_eval_sample: int = 15000) -> AnalysisResult:
+def analyze_wordlist(wordlist: set[str] | list[str], max_eval_sample: int = 30000) -> AnalysisResult:
     result = AnalysisResult()
     if not wordlist:
         return result
@@ -55,56 +55,57 @@ def analyze_wordlist(wordlist: set[str] | list[str], max_eval_sample: int = 1500
     total = len(word_list)
     result.total_words = total
 
-    # If dataset is very large (> 25000), sample for fast length & char stats
-    if total > 30000:
-        stat_sample = random.sample(word_list, 20000)
-        len_dist = Counter(len(w) for w in stat_sample)
-        scale = total / 20000
-        result.length_distribution = {k: int(v * scale) for k, v in sorted(len_dist.items())}
-        result.avg_length = sum(len(w) for w in stat_sample) / len(stat_sample)
-        all_chars: Counter = Counter()
-        for w in stat_sample:
-            all_chars.update(w)
-        result.char_frequency = dict(all_chars.most_common(20))
-        check_words = stat_sample
+    # Exact length distribution and average length
+    len_dist = Counter(len(w) for w in word_list)
+    result.length_distribution = dict(sorted(len_dist.items()))
+    total_chars = sum(k * v for k, v in len_dist.items())
+    result.avg_length = round(total_chars / max(total, 1), 2)
+
+    # Character frequency: count exact top characters (sample only if > 150k words for responsiveness)
+    if total > 150000:
+        char_sample = random.sample(word_list, 50000)
+        all_chars = Counter("".join(char_sample))
     else:
-        len_dist = Counter(len(w) for w in word_list)
-        result.length_distribution = dict(sorted(len_dist.items()))
-        result.avg_length = sum(k * v for k, v in len_dist.items()) / total
-        all_chars = Counter()
-        for w in word_list:
-            all_chars.update(w)
-        result.char_frequency = dict(all_chars.most_common(20))
-        check_words = word_list
+        all_chars = Counter("".join(word_list))
+    result.char_frequency = dict(all_chars.most_common(18))
 
-    # Pattern Breakdown
-    n_sample = len(check_words)
-    prefixes = ('admin_', 'user_', 'root_', 'hack_', 'pass_', 'secret_')
-    leet_set = {'@', '$', '0', '1', '3', '4', '5', '7', '8', '!'}
-    
-    with_prefix = 0
-    with_suffix_num = 0
-    with_leet = 0
-    with_upper = 0
+    # Accurate, realistic password structural pattern breakdown
+    pattern_sample = word_list if total <= 50000 else random.sample(word_list, 50000)
+    n_sample = len(pattern_sample)
 
-    for w in check_words:
-        if w.startswith(prefixes):
-            with_prefix += 1
-        if w and w[-1].isdigit():
-            with_suffix_num += 1
-        if any(c in leet_set for c in w):
-            with_leet += 1
-        if any(c.isupper() for c in w):
-            with_upper += 1
+    pure_lower = 0
+    capitalized = 0
+    has_digit = 0
+    has_special = 0
+    mixed_complex = 0
+
+    for w in pattern_sample:
+        is_alpha = w.isalpha()
+        is_lower = w.islower()
+        has_num = any(c.isdigit() for c in w)
+        has_sym = any(not c.isalnum() for c in w)
+        has_let = any(c.isalpha() for c in w)
+
+        if is_lower and is_alpha:
+            pure_lower += 1
+        if len(w) > 1 and w[0].isupper() and w[1:].islower():
+            capitalized += 1
+        if has_num:
+            has_digit += 1
+        if has_sym:
+            has_special += 1
+        if has_let and has_num and has_sym:
+            mixed_complex += 1
 
     result.pattern_breakdown = {
-        'Has Prefix': round(100 * with_prefix / n_sample, 1),
-        'Ends with Digit': round(100 * with_suffix_num / n_sample, 1),
-        'Leet Chars': round(100 * with_leet / n_sample, 1),
-        'Has Uppercase': round(100 * with_upper / n_sample, 1),
+        'Has Digits': round(100 * has_digit / max(n_sample, 1), 1),
+        'Has Symbols': round(100 * has_special / max(n_sample, 1), 1),
+        'Pure Lower': round(100 * pure_lower / max(n_sample, 1), 1),
+        'Capitalized': round(100 * capitalized / max(n_sample, 1), 1),
+        'Mixed Complex': round(100 * mixed_complex / max(n_sample, 1), 1),
     }
 
-    # Entropy evaluation sample (limit to max_eval_sample for instantaneous response)
+    # Shannon entropy evaluation sample (up to max_eval_sample for deep ranking)
     if total > max_eval_sample:
         entropy_sample = random.sample(word_list, max_eval_sample)
     else:
