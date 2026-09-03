@@ -1,6 +1,9 @@
 <div align="center">
 
-# <img src="cipherforge/assets/logo.png" width="40" height="40" valign="middle" alt="CipherForge Logo" /> CipherForge
+<h1 align="center" style="font-family: 'Orbitron', 'Rajdhani', 'Space Grotesk', 'Montserrat', 'Segoe UI', sans-serif; font-size: 42px; font-weight: 900; letter-spacing: 3.5px;">
+  <img src="cipherforge/assets/logo.png" width="48" height="48" valign="middle" alt="CipherForge Logo" />
+  &nbsp;CIPHERFORGE
+</h1>
 
 **Targeted Credential Permutation & Entropy Analysis Suite**
 
@@ -8,11 +11,11 @@
 
 <br/>
 
-[![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?style=flat-square&logo=python&logoColor=white)](https://www.python.org/)
-[![GUI Framework](https://img.shields.io/badge/GUI-PyQt6-41CD52?style=flat-square&logo=qt&logoColor=white)](https://www.riverbankcomputing.com/software/pyqt/)
-[![Engine](https://img.shields.io/badge/Engine-3--Stage%20Synthesis-FF6B6B?style=flat-square)]()
-[![License: MIT](https://img.shields.io/badge/License-MIT-8A2BE2?style=flat-square)](LICENSE)
-[![Author](https://img.shields.io/badge/Author-Siddhesh-00C49F?style=flat-square)]()
+[![Python](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)
+[![GUI Framework](https://img.shields.io/badge/GUI-PyQt6-green.svg)](https://www.riverbankcomputing.com/software/pyqt/)
+[![Engine](https://img.shields.io/badge/Engine-3--Stage%20Synthesis-orange.svg)]()
+[![License: MIT](https://img.shields.io/badge/License-MIT-purple.svg)](LICENSE)
+[![Author](https://img.shields.io/badge/Author-Siddhesh-brightgreen.svg)]()
 
 </div>
 
