@@ -19,7 +19,7 @@ from PyQt6.QtWidgets import (
     QTableWidget, QTableWidgetItem, QHeaderView, QAbstractItemView,
     QComboBox, QListView, QSizePolicy
 )
-from PyQt6.QtCore import Qt, QThread, pyqtSignal, QRect, QSize, QTimer
+from PyQt6.QtCore import Qt, QThread, pyqtSignal, QRect, QSize, QTimer, QPoint
 from PyQt6.QtGui import (
     QColor, QPainter, QLinearGradient, QFont, QPixmap, QBrush, QPen, QCursor, QPalette
 )
@@ -110,6 +110,22 @@ INDIAN_PETS = ["Bruno", "Simba", "Rocky", "Leo", "Tiger", "Max", "Buddy", "Sheru
 INDIAN_COLORS = ["Blue", "Black", "Red", "Green", "White", "Saffron", "Navy", "Gold"]
 INDIAN_SPORTS = ["Cricket", "Football", "Badminton", "Kabaddi", "Chess", "Tennis", "Hockey"]
 RELATIONS = ["Spouse", "Child", "Sibling", "Parent", "Close Friend", "Other"]
+
+
+class DropdownComboBox(QComboBox):
+    """
+    Custom QComboBox that dynamically positions its popup menu strictly below
+    the selection field, matching the exact width and alignment of the field,
+    keeping the selected field fully visible above without covering it.
+    """
+    def showPopup(self):
+        super().showPopup()
+        container = self.view().parentWidget()
+        if container:
+            p = self.mapToGlobal(QPoint(0, self.height()))
+            container.move(p.x(), p.y())
+            container.resize(self.width(), container.height())
+            QTimer.singleShot(0, lambda: container.move(p.x(), p.y()) if container else None)
 
 def _qss(t: dict) -> str:
     return f"""
@@ -1051,8 +1067,8 @@ class CipherForgeWindow(QMainWindow):
         f_in_row.setSpacing(8)
         f_in_row.setAlignment(Qt.AlignmentFlag.AlignVCenter)
 
-        # Single clean opaque dropdown popup tightly containing 6 options
-        self._combo_relation = QComboBox()
+        # DropdownComboBox: expands strictly below the field, matching width, leaving field visible above
+        self._combo_relation = DropdownComboBox()
         combo_view = QListView()
         self._combo_relation.setView(combo_view)
 
