@@ -1,18 +1,18 @@
 <div align="center">
 
-  <p align="center" style="margin: 0 0 18px 0;">
-    <img src="cipherforge/assets/logo.png" width="68" height="68" align="middle" style="vertical-align: middle; margin-right: 16px;" alt="CipherForge Logo" /><strong style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 32px; font-weight: 800; letter-spacing: 1.5px; vertical-align: middle;">CIPHERFORGE</strong>
+  <p align="center" style="margin: 0 0 20px 0;">
+    <img src="cipherforge/assets/hero.svg" alt="CipherForge" width="485" height="68" />
   </p>
 
-  <p align="center" style="margin: 0 0 10px 0;">
-    <strong style="font-size: 21px; font-weight: 600;">Targeted Credential Permutation &amp; Entropy Analysis Suite</strong>
+  <p align="center" style="margin: 0 0 12px 0;">
+    <strong style="font-size: 20px; font-weight: 600;">Targeted Credential Permutation &amp; Entropy Analysis Suite</strong>
   </p>
 
-  <p align="center" style="margin: 0 0 18px 0; max-width: 680px; font-size: 14px; line-height: 1.5;">
+  <p align="center" style="margin: 0 0 20px 0; max-width: 680px; font-size: 14px; line-height: 1.5;">
     A desktop application and scriptable CLI tool engineered for security auditors, penetration testers, and security researchers to benchmark credential resilience using targeted psychological anchor profiling.
   </p>
 
-  <p align="center" style="margin: 0 0 18px 0;">
+  <p align="center" style="margin: 0 0 24px 0;">
     <a href="https://www.python.org/"><img src="https://img.shields.io/badge/Python-3.10%2B-blue.svg" alt="Python" /></a>&nbsp;
     <a href="https://www.riverbankcomputing.com/software/pyqt/"><img src="https://img.shields.io/badge/GUI-PyQt6-green.svg" alt="GUI Framework" /></a>&nbsp;
     <img src="https://img.shields.io/badge/Engine-3--Stage%20Synthesis-orange.svg" alt="Engine" />&nbsp;
@@ -111,8 +111,8 @@ CipherForge/
 |   |-- assets/
 |   |   |-- app_icon.ico          # Multi-resolution Windows application icon (16x16 to 256x256)
 |   |   |-- chevron_down.png      # Custom combobox dropdown chevron
-|   |   |-- logo.png              # Official brand logo (RGBA transparent)
-|   |   `-- logo.jpg              # Brand asset fallback
+|   |   |-- hero.svg              # Vector brand lockup for README & documentation
+|   |   `-- logo.jpg              # Official brand logo asset
 |   |-- core/
 |   |   |-- __init__.py           # Core module exports
 |   |   |-- analyzer.py           # Shannon entropy engine and structural analysis
