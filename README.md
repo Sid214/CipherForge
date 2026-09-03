@@ -1,9 +1,10 @@
 <div align="center">
 
-<h1 align="center">
-  <img src="cipherforge/assets/logo.png" width="46" height="46" align="absmiddle" style="vertical-align: middle; margin-right: 8px;" alt="CipherForge Logo" /><span style="font-family: 'Agency FB', Impact, 'Arial Black', sans-serif; font-size: 46px; font-weight: 900; letter-spacing: 1.5px; vertical-align: middle;">CIPHERFORGE</span>
-</h1>
+<a href="#cipherforge">
+  <img src="cipherforge/assets/title.svg" alt="CipherForge" width="450" />
+</a>
 
+<br/>
 **Targeted Credential Permutation & Entropy Analysis Suite**
 
 *A desktop application and scriptable CLI tool engineered for security auditors, penetration testers, and security researchers to benchmark credential resilience using targeted psychological anchor profiling.*
