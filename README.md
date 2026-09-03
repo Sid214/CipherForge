@@ -1,16 +1,8 @@
 <div align="center">
 
-<table border="0" cellpadding="0" cellspacing="0">
-  <tr>
-    <td align="right" valign="middle">
-      <img src="cipherforge/assets/logo.png" width="80" height="80" alt="CipherForge Logo" />
-    </td>
-    <td align="left" valign="middle" width="16"></td>
-    <td align="left" valign="middle">
-      <h1><b>CIPHERFORGE</b></h1>
-    </td>
-  </tr>
-</table>
+<p align="center">
+  <img src="cipherforge/assets/logo.png" width="68" height="68" align="absmiddle" style="vertical-align: middle; margin-right: 12px;" alt="CipherForge Logo" /><span style="font-family: 'Arial Black', Arial, sans-serif; font-size: 44px; font-weight: 900; letter-spacing: 2px; vertical-align: middle;">CIPHERFORGE</span>
+</p>
 
 ### **Targeted Credential Permutation &amp; Entropy Analysis Suite**
 
