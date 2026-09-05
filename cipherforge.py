@@ -175,6 +175,20 @@ def run_cli(args: argparse.Namespace) -> None:
 
 # ── Entry point ───────────────────────────────────────────────────────────────
 def main():
+    if sys.platform == "win32" and len(sys.argv) > 1:
+        try:
+            import ctypes
+            if ctypes.windll.kernel32.AttachConsole(-1):
+                sys.stdout = open("CONOUT$", "w", encoding="utf-8", errors="replace")
+                sys.stderr = open("CONOUT$", "w", encoding="utf-8", errors="replace")
+        except Exception:
+            pass
+    if sys.stdout is None:
+        import io
+        sys.stdout = io.StringIO()
+    if sys.stderr is None:
+        import io
+        sys.stderr = io.StringIO()
     parser = build_parser()
 
     # If no args at all -> launch GUI
