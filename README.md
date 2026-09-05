@@ -112,7 +112,8 @@ CipherForge/
 |   |   |-- app_icon.ico          # Multi-resolution Windows application icon (16x16 to 256x256)
 |   |   |-- chevron_down.png      # Custom combobox dropdown chevron
 |   |   |-- hero.svg              # Vector brand lockup for README & documentation
-|   |   `-- logo.jpg              # Official brand logo asset
+|   |   |-- logo.png              # Transparent GUI brand emblem (RGBA)
+|   |   `-- logo.jpg              # Official brand artwork asset
 |   |-- core/
 |   |   |-- __init__.py           # Core module exports
 |   |   |-- analyzer.py           # Shannon entropy engine and structural analysis
