@@ -20,9 +20,41 @@
     <img src="https://img.shields.io/badge/Author-Siddhesh-brightgreen.svg" alt="Author" />
   </p>
 
+  <p align="center">
+    <a href="https://github.com/Sid214/CipherForge/releases"><strong>Download for Windows (.exe)</strong></a> &bull;
+    <a href="#usage-guide"><strong>Documentation &amp; Usage</strong></a> &bull;
+    <a href="#installation--setup"><strong>Source Code &amp; Setup</strong></a>
+  </p>
+
 </div>
 
 ---
+
+Targeted credential permutation and entropy analysis suite for generating compact, high-probability wordlists from personal anchor profiles.
+
+---
+
+## Download
+
+For Windows users who want to run CipherForge directly without configuring a Python environment:
+
+- **[Download Latest CipherForge.exe](https://github.com/Sid214/CipherForge/releases/latest)** (~36.5 MB standalone executable)
+- Download the executable from the [GitHub Releases](https://github.com/Sid214/CipherForge/releases) section.
+- Fully self-contained single-file build with PyQt6, Python runtime, and all required graphical assets embedded.
+- Double-click to launch the graphical desktop studio, or execute from PowerShell / Command Prompt for CLI operations.
+- No Python installation, virtual environment, or external dependencies required.
+
+---
+
+## Feature Summary
+
+- **Personal Anchor Profiling**: Generates targeted permutations derived strictly from biographical parameters (names, dates, locations, pets, sports, custom keywords).
+- **Wordlist Optimization & Filler Elimination**: Synthesizes compact, high-probability dictionaries without generic dictionary padding or synthetic prefixes.
+- **Shannon Entropy Analysis**: Computes mathematical bit-entropy ($H$) and classifies candidates into four resilience tiers (*Weak*, *Fair*, *Strong*, *Excellent*).
+- **Dual Mode (GUI & CLI)**:
+  - **PyQt6 Desktop Suite**: Hardware-accelerated interface with live telemetry distributions and native Light/Dark themes.
+  - **Scriptable CLI Engine**: Automated command-line engine for scripting, security pipelines, and remote audits.
+- **Windows Standalone Executable**: Pre-compiled single-file executable available directly via GitHub Releases.
 
 ## Executive Overview
 
@@ -134,27 +166,44 @@ CipherForge/
 
 ## Installation & Setup
 
-### 1. Prerequisites
+### Option A: Windows Standalone Executable (Recommended for Windows)
+
+If you only need to run the application on Windows, setting up Python is not required:
+
+1. Download `CipherForge.exe` from the latest [GitHub Release](https://github.com/Sid214/CipherForge/releases/latest).
+2. **Desktop GUI**: Double-click `CipherForge.exe` to launch the interactive studio.
+3. **CLI Mode**: Open Command Prompt or PowerShell and invoke the executable directly:
+   ```cmd
+   CipherForge.exe --help
+   CipherForge.exe --name "Alice" --year 1995 --pet "Milo"
+   ```
+*(Note: The standalone executable is pre-compiled for 64-bit Windows.)*
+
+### Option B: Running from Source (Python 3.10+)
+
+For developers, contributors, or Linux/macOS environments:
+
+#### 1. Prerequisites
 Ensure Python 3.10 or newer is installed on your workstation.
 
-### 2. Clone the Repository
+#### 2. Clone the Repository
 ```bash
-git clone https://github.com/your-org/CipherForge.git
+git clone https://github.com/Sid214/CipherForge.git
 cd CipherForge
 ```
 
-### 3. Initialize Virtual Environment
+#### 3. Initialize Virtual Environment
 ```bash
 # Windows
 python -m venv .venv
-.venv\Scriptsctivate
+.venv\Scripts\activate
 
 # Linux / macOS
 python3 -m venv .venv
 source .venv/bin/activate
 ```
 
-### 4. Install Dependencies
+#### 4. Install Dependencies
 ```bash
 pip install -r requirements.txt
 ```
